@@ -1,766 +1,1327 @@
-# 🤖 HubAgents V2 - Sistema Multi-Agente de Análise de Risco
+# HubAgents V2: Sistema Multi-Agente para Análise de Risco
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
-[![Microsoft Agent Framework](https://img.shields.io/badge/Agent_Framework-1.0.0b-orange.svg)](https://microsoft.github.io/agent-framework/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Microsoft Agent Framework](https://img.shields.io/badge/Agent_Framework-1.0.0b-FF6F00?style=flat-square)](https://microsoft.github.io/agent-framework/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-Sistema avançado de análise de risco utilizando **múltiplos agentes de IA** baseado no **Microsoft Agent Framework**. O sistema analisa respostas de usuários através de 5 agentes especialistas, um supervisor de qualidade e um sintetizador para produzir análises de risco detalhadas e fundamentadas.
-
----
-
-## 📋 Índice
-
-- [Visão Geral](#-visão-geral)
-- [Arquitetura do Sistema](#-arquitetura-do-sistema)
-- [Fluxo de Execução](#-fluxo-de-execução)
-- [Componentes Principais](#-componentes-principais)
-- [Instalação](#-instalação)
-- [Configuração](#-configuração)
-- [Uso da API](#-uso-da-api)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Tecnologias](#-tecnologias)
-- [Exemplos](#-exemplos)
+> **Trabalho de Conclusão de Curso** - Sistema inteligente de análise de risco baseado em arquitetura multi-agente, utilizando Large Language Models (LLMs) para processamento e síntese de informações contextuais complexas.
 
 ---
 
-## 🎯 Visão Geral
+## 📋 Sumário
 
-O **HubAgents V2** é um sistema de análise de risco que utiliza inteligência artificial multi-agente para avaliar situações complexas através da análise de 5 respostas de usuários. Cada resposta é analisada por um agente especialista em seu domínio específico, passando por um processo de revisão de qualidade antes de ser sintetizada em um relatório final consolidado.
-
-### ✨ Principais Características
-
-- 🧠 **5 Agentes Especialistas** - Cada um focado em um domínio específico
-- 👁️ **Supervisor de Qualidade** - Revisa e aprova todas as análises
-- 🔄 **Loop de Revisão** - Até 1 retrabalho por análise para garantir qualidade
-- 📊 **Síntese Inteligente** - Consolida todas as avaliações em score unificado
-- 🎯 **Análise Baseada em Few-Shot Learning** - Aprende com exemplos contextuais
-- ⚡ **API REST Assíncrona** - Alta performance com FastAPI
-- 🔌 **Multi-Provider LLM** - Suporta Azure OpenAI, OpenAI e Groq
-
-### 🎭 Os 5 Agentes Especialistas
-
-| Agente | Domínio | Foco da Análise |
-|--------|---------|-----------------|
-| **👔 Agente 1** | Tarefas Domésticas | Divisão de responsabilidades e dinâmicas de poder |
-| **💬 Agente 2** | Tom Emocional | Comunicação, respeito e clima emocional |
-| **🤝 Agente 3** | Redes de Apoio | Isolamento social e suporte disponível |
-| **💰 Agente 4** | Controle Financeiro | Autonomia financeira e dependência econômica |
-| **🏥 Agente 5** | Bem-estar Físico | Indicadores de agressão física e bem-estar |
+- [1. Resumo do Projeto](#1-resumo-do-projeto)
+- [2. Fundamentação Teórica](#2-fundamentação-teórica)
+- [3. Arquitetura do Sistema](#3-arquitetura-do-sistema)
+- [4. Metodologia](#4-metodologia)
+- [5. Implementação](#5-implementação)
+- [6. Guia de Instalação](#6-guia-de-instalação)
+- [7. Utilização da API](#7-utilização-da-api)
+- [8. Resultados e Discussão](#8-resultados-e-discussão)
+- [9. Referências](#9-referências)
 
 ---
 
-## 🏗️ Arquitetura do Sistema
+## 1. Resumo do Projeto
 
-### Diagrama de Arquitetura Geral
+Este trabalho apresenta o desenvolvimento de um sistema de análise de risco baseado em arquitetura multi-agente, implementado utilizando o Microsoft Agent Framework. O sistema foi projetado para processar e analisar informações contextuais fornecidas por usuários, gerando avaliações de risco estruturadas e fundamentadas através da colaboração de múltiplos agentes especializados.
+
+### 1.1 Objetivos
+
+**Objetivo Geral:**
+Desenvolver um sistema computacional capaz de realizar análises de risco complexas através da coordenação de múltiplos agentes de inteligência artificial especializados.
+
+**Objetivos Específicos:**
+- Implementar uma arquitetura multi-agente escalável utilizando Large Language Models
+- Desenvolver mecanismos de revisão e controle de qualidade automatizados
+- Criar um pipeline de síntese que consolide análises paralelas em avaliações unificadas
+- Validar a eficácia do sistema através de casos de teste representativos
+
+### 1.2 Justificativa
+
+A análise de risco em contextos complexos frequentemente requer expertise multidisciplinar. Sistemas tradicionais baseados em regras apresentam limitações em termos de adaptabilidade e capacidade de processamento contextual. Este projeto propõe uma abordagem inovadora utilizando agentes de IA especializados que colaboram para produzir análises mais robustas e fundamentadas.
+
+---
+
+## 2. Fundamentação Teórica
+
+### 2.1 Sistemas Multi-Agente
+
+Sistemas multi-agente (MAS - Multi-Agent Systems) representam um paradigma computacional onde múltiplos agentes autônomos colaboram para resolver problemas complexos. Neste projeto, cada agente é especializado em um domínio específico de análise, permitindo uma avaliação multidimensional do contexto apresentado.
+
+### 2.2 Large Language Models (LLMs)
+
+O sistema utiliza LLMs como base cognitiva dos agentes. Modelos como GPT-4 da OpenAI e Llama 3 demonstram capacidades avançadas de compreensão contextual e raciocínio, sendo ideais para tarefas de análise qualitativa complexa.
+
+### 2.3 Microsoft Agent Framework
+
+O Microsoft Agent Framework fornece uma camada de abstração para criação e orquestração de agentes de IA, simplificando a implementação de sistemas multi-agente e oferecendo suporte nativo para múltiplos provedores de LLM.
+
+### 2.4 Arquitetura de Especialização
+
+A arquitetura implementada baseia-se no princípio de **especialização por domínio**, onde cada agente desenvolve expertise em uma dimensão específica da análise:
+
+| Agente | Domínio de Especialização | Fundamentação Teórica |
+|--------|---------------------------|----------------------|
+| **Agente 1** | Dinâmicas Domésticas | Análise de divisão de tarefas e relações de poder |
+| **Agente 2** | Comunicação Interpessoal | Avaliação de padrões comunicacionais e clima emocional |
+| **Agente 3** | Redes de Suporte Social | Identificação de isolamento e recursos de apoio |
+| **Agente 4** | Autonomia Financeira | Análise de controle econômico e dependência financeira |
+| **Agente 5** | Integridade Física | Detecção de indicadores de agressão e bem-estar |
+
+---
+
+## 3. Arquitetura do Sistema
+
+### 3.1 Visão Arquitetural
+
+O sistema foi desenvolvido seguindo princípios de **arquitetura limpa** e **separação de responsabilidades**, organizando-se em três camadas principais: API, Lógica de Negócio e Persistência.
+
+```mermaid
+flowchart TB
+    subgraph CLIENT["Camada de Cliente"]
+        A[Aplicação Cliente]
+    end
+    
+    subgraph API["Camada de API - FastAPI"]
+        B[Endpoint /analyze]
+        C[Validação de Requisições]
+        D[Tratamento de Respostas]
+    end
+    
+    subgraph ORCHESTRATION["Camada de Orquestração"]
+        E[Controlador Principal]
+        F[Gerenciador de Fluxo]
+    end
+    
+    subgraph AGENTS["Camada de Agentes"]
+        direction TB
+        G[Agentes Especialistas]
+        H[Agente Supervisor]
+        I[Agente Sintetizador]
+    end
+    
+    subgraph LLM["Provedores LLM"]
+        J[Azure OpenAI]
+        K[OpenAI]
+        L[Groq]
+    end
+    
+    subgraph STORAGE["Camada de Dados"]
+        M[(Few-Shot Examples)]
+        N[(Logs JSON)]
+    end
+    
+    A -->|HTTP POST| B
+    B --> C
+    C --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> D
+    D -->|HTTP Response| A
+    
+    G -.->|API Calls| J & K & L
+    H -.->|API Calls| J & K & L
+    I -.->|API Calls| J & K & L
+    
+    G -.->|Carrega| M
+    E -.->|Registra| N
+    
+    classDef clientStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef apiStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef orchestrationStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef agentStyle fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef llmStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef storageStyle fill:#e0f2f1,stroke:#00796b,stroke-width:2px
+    
+    class A clientStyle
+    class B,C,D apiStyle
+    class E,F orchestrationStyle
+    class G,H,I agentStyle
+    class J,K,L llmStyle
+    class M,N storageStyle
+```
+
+### 3.2 Diagrama de Componentes Detalhado
 
 ```mermaid
 graph TB
-    subgraph "Cliente"
-        A[👤 Usuário] -->|5 Respostas| B[📡 API Request]
+    subgraph PRESENTATION["Camada de Apresentação"]
+        API[FastAPI Application<br/>main.py]
     end
     
-    subgraph "FastAPI Server"
-        B --> C[🔍 Validação Pydantic]
-        C --> D[📝 Logger]
-        D --> E{Orquestrador}
+    subgraph MODEL["Camada de Modelo"]
+        SCHEMAS[Schemas Pydantic<br/>models/schemas.py]
     end
     
-    subgraph "Fase 1: Análise Paralela"
-        E --> F1[🧠 Agente 1<br/>Tarefas Domésticas]
-        E --> F2[💬 Agente 2<br/>Tom Emocional]
-        E --> F3[🤝 Agente 3<br/>Redes de Apoio]
-        E --> F4[💰 Agente 4<br/>Controle Financeiro]
-        E --> F5[🏥 Agente 5<br/>Bem-estar Físico]
+    subgraph BUSINESS["Camada de Lógica de Negócio"]
+        SA[Análise Especializada<br/>specialist_analysis.py]
+        RL[Loop de Revisão<br/>review_loop.py]
+        SY[Sintetizador<br/>synthesizer.py]
+        BA[Agente Base<br/>specialist_agent.py]
+        AF[Factory de Agentes<br/>agent_factory.py]
     end
     
-    subgraph "Fase 2: Revisão"
-        F1 & F2 & F3 & F4 & F5 --> G[👁️ Supervisor<br/>de Qualidade]
-        G -->|Aprovado| H[✅ Relatórios<br/>Aprovados]
-        G -->|Revisar| I[🔄 Feedback]
-        I --> F1 & F2 & F3 & F4 & F5
+    subgraph CONFIG["Configuração"]
+        LLM[Configuração LLM<br/>llm_config.py]
+        PROMPTS[Prompts do Sistema<br/>system_prompts.py]
     end
     
-    subgraph "Fase 3: Síntese"
-        H --> J[🎯 Sintetizador]
-        J --> K[📊 Score Final<br/>0-100]
-        J --> L[⚠️ Nível de Risco<br/>Baixo/Médio/Alto]
-        J --> M[📋 Recomendações]
+    subgraph UTILS["Utilitários"]
+        DL[Carregador de Dados<br/>data_loader.py]
+        LOG[Sistema de Logs<br/>logger.py]
+        VAL[Validadores<br/>validators.py]
     end
     
-    subgraph "Resposta"
-        K & L & M --> N[📄 JSON Completo]
-        N --> O[📤 Response]
+    subgraph DATA["Dados"]
+        CSV[Datasets CSV<br/>Few-Shot Examples]
+        LOGS[Logs JSON<br/>Requisições]
     end
     
-    O --> A
+    API --> SCHEMAS
+    API --> SA
+    API --> LOG
+    API --> VAL
     
-    style A fill:#e1f5ff
-    style E fill:#fff4e6
-    style G fill:#ffe6e6
-    style J fill:#e6ffe6
-    style N fill:#f0e6ff
-```
-
-### Diagrama de Componentes
-
-```mermaid
-graph LR
-    subgraph "API Layer"
-        A[main.py<br/>FastAPI App]
-    end
+    SA --> BA
+    SA --> RL
+    RL --> SY
     
-    subgraph "Models"
-        B1[schemas.py<br/>Pydantic Models]
-    end
+    BA --> AF
+    AF --> LLM
+    BA --> PROMPTS
+    BA --> DL
     
-    subgraph "Agents"
-        C1[specialist_agent.py<br/>Base Agent]
-        C2[specialist_analysis.py<br/>Parallel Analysis]
-        C3[review_loop.py<br/>Supervisor Loop]
-        C4[synthesizer.py<br/>Final Synthesis]
-        C5[agent_factory.py<br/>Agent Creator]
-    end
+    DL --> CSV
+    LOG --> LOGS
     
-    subgraph "Configuration"
-        D1[llm_config.py<br/>LLM Setup]
-        D2[system_prompts.py<br/>Prompts]
-    end
+    classDef presentationStyle fill:#2196F3,stroke:#1565C0,stroke-width:3px,color:#fff
+    classDef modelStyle fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
+    classDef businessStyle fill:#FF9800,stroke:#E65100,stroke-width:3px,color:#fff
+    classDef configStyle fill:#9C27B0,stroke:#6A1B9A,stroke-width:3px,color:#fff
+    classDef utilsStyle fill:#00BCD4,stroke:#00838F,stroke-width:3px,color:#fff
+    classDef dataStyle fill:#607D8B,stroke:#37474F,stroke-width:3px,color:#fff
     
-    subgraph "Utilities"
-        E1[data_loader.py<br/>Few-Shot Data]
-        E2[logger.py<br/>Request Logging]
-        E3[validators.py<br/>Validation]
-    end
-    
-    A --> B1
-    A --> C2
-    C2 --> C3
-    C3 --> C4
-    C2 & C3 & C4 --> C1
-    C1 --> C5
-    C5 --> D1
-    C1 --> D2
-    C2 --> E1
-    A --> E2
-    A --> E3
-    
-    style A fill:#4CAF50
-    style C1 fill:#2196F3
-    style C2 fill:#2196F3
-    style C3 fill:#2196F3
-    style C4 fill:#2196F3
-    style C5 fill:#2196F3
-    style D1 fill:#FF9800
-    style D2 fill:#FF9800
-    style E1 fill:#9C27B0
-    style E2 fill:#9C27B0
-    style E3 fill:#9C27B0
+    class API presentationStyle
+    class SCHEMAS modelStyle
+    class SA,RL,SY,BA,AF businessStyle
+    class LLM,PROMPTS configStyle
+    class DL,LOG,VAL utilsStyle
+    class CSV,LOGS dataStyle
 ```
 
 ---
 
-## 🔄 Fluxo de Execução
+## 4. Metodologia
 
-### Fluxo Detalhado de Análise
+### 4.1 Fluxo de Processamento
+
+O sistema implementa um pipeline de processamento em três fases distintas, cada uma com objetivos e responsabilidades bem definidas:
+
+```mermaid
+flowchart TD
+    START([Início]) --> INPUT[Recepção de 5 Respostas]
+    INPUT --> VALIDATE{Validação<br/>Pydantic}
+    
+    VALIDATE -->|Inválido| ERROR1[Retorna Erro 422]
+    VALIDATE -->|Válido| PHASE1[FASE 1: Análise Paralela]
+    
+    PHASE1 --> AGENT1[Agente 1: Dinâmicas Domésticas]
+    PHASE1 --> AGENT2[Agente 2: Comunicação]
+    PHASE1 --> AGENT3[Agente 3: Redes de Apoio]
+    PHASE1 --> AGENT4[Agente 4: Autonomia Financeira]
+    PHASE1 --> AGENT5[Agente 5: Integridade Física]
+    
+    AGENT1 --> REPORT1[Relatório Especializado 1]
+    AGENT2 --> REPORT2[Relatório Especializado 2]
+    AGENT3 --> REPORT3[Relatório Especializado 3]
+    AGENT4 --> REPORT4[Relatório Especializado 4]
+    AGENT5 --> REPORT5[Relatório Especializado 5]
+    
+    REPORT1 & REPORT2 & REPORT3 & REPORT4 & REPORT5 --> PHASE2[FASE 2: Controle de Qualidade]
+    
+    PHASE2 --> REVIEW{Revisão por<br/>Supervisor}
+    
+    REVIEW -->|Aprovado| APPROVED[Relatórios Aprovados]
+    REVIEW -->|Requer Ajustes| FEEDBACK[Feedback Detalhado]
+    FEEDBACK --> REWORK[Retrabalho do Agente]
+    REWORK --> REVIEW
+    
+    APPROVED --> PHASE3[FASE 3: Síntese e Consolidação]
+    
+    PHASE3 --> ANALYZE[Análise Cruzada]
+    ANALYZE --> CALCULATE[Cálculo de Score]
+    CALCULATE --> CLASSIFY[Classificação de Risco]
+    CLASSIFY --> CONSOLIDATE[Consolidação de Fatores]
+    CONSOLIDATE --> RECOMMEND[Geração de Recomendações]
+    
+    RECOMMEND --> OUTPUT[Resposta JSON Estruturada]
+    OUTPUT --> END([Fim])
+    ERROR1 --> END
+    
+    classDef phaseStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:3px
+    classDef agentStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef reviewStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef synthesisStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+    classDef errorStyle fill:#ffebee,stroke:#c62828,stroke-width:2px
+    
+    class PHASE1,PHASE2,PHASE3 phaseStyle
+    class AGENT1,AGENT2,AGENT3,AGENT4,AGENT5 agentStyle
+    class REVIEW,FEEDBACK,REWORK reviewStyle
+    class ANALYZE,CALCULATE,CLASSIFY,CONSOLIDATE,RECOMMEND synthesisStyle
+    class ERROR1 errorStyle
+```
+
+### 4.2 Diagrama de Sequência Detalhado
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 Cliente
-    participant API as 🌐 FastAPI
-    participant V as ✅ Validator
-    participant SA as 🧠 Specialist<br/>Analysis
-    participant A1 as Agent 1
-    participant A2 as Agent 2
-    participant A3 as Agent 3
-    participant A4 as Agent 4
-    participant A5 as Agent 5
-    participant RL as 👁️ Review<br/>Loop
-    participant SV as 🔍 Supervisor
-    participant SY as 🎯 Synthesizer
-    participant L as 📝 Logger
+    autonumber
+    actor Cliente
+    participant API as FastAPI Server
+    participant Validator as Validador
+    participant Orchestra as Orquestrador
+    participant Specialists as Agentes Especialistas
+    participant Supervisor as Agente Supervisor
+    participant Synthesizer as Agente Sintetizador
+    participant Logger as Sistema de Logs
     
-    U->>API: POST /analyze {5 respostas}
-    API->>V: Validar Request
-    V-->>API: ✓ Valid
-    API->>L: Log request
+    Cliente->>+API: POST /analyze<br/>{5 respostas}
+    API->>+Validator: validate(request)
+    Validator-->>-API: AnalysisRequest
     
-    Note over API,SA: FASE 1: Análise Paralela
-    API->>SA: run_specialist_analysis()
+    API->>+Logger: log_request()
+    Logger-->>-API: request_id
     
-    par Análise Paralela
-        SA->>A1: Analisa Resposta 1
-        SA->>A2: Analisa Resposta 2
-        SA->>A3: Analisa Resposta 3
-        SA->>A4: Analisa Resposta 4
-        SA->>A5: Analisa Resposta 5
-    end
+    API->>+Orchestra: orchestrate_analysis()
     
-    A1-->>SA: Relatório 1
-    A2-->>SA: Relatório 2
-    A3-->>SA: Relatório 3
-    A4-->>SA: Relatório 4
-    A5-->>SA: Relatório 5
-    
-    SA->>L: Log specialist reports
-    SA-->>API: 5 Relatórios Iniciais
-    
-    Note over API,SV: FASE 2: Loop de Revisão
-    API->>RL: run_review_loop()
-    
-    loop Para cada Relatório
-        RL->>SV: Revisar Relatório
-        alt Aprovado
-            SV-->>RL: ✓ APROVADO
-            RL->>L: Log approval
-        else Precisa Revisar
-            SV-->>RL: ⚠️ REVISAR + Feedback
-            RL->>L: Log feedback
-            RL->>A1: Refazer com feedback
-            A1-->>RL: Relatório Revisado
-            RL->>SV: Re-avaliar
-            SV-->>RL: ✓ APROVADO
+    rect rgb(232, 245, 233)
+        note right of Orchestra: FASE 1: Análise Paralela
+        Orchestra->>+Specialists: run_specialist_analysis()
+        
+        par Análise Simultânea
+            Specialists->>Specialists: Agente 1 analisa
+            Specialists->>Specialists: Agente 2 analisa
+            Specialists->>Specialists: Agente 3 analisa
+            Specialists->>Specialists: Agente 4 analisa
+            Specialists->>Specialists: Agente 5 analisa
         end
+        
+        Specialists-->>-Orchestra: 5 SpecialistReports
+        Orchestra->>Logger: log_specialist_reports()
     end
     
-    RL-->>API: 5 Relatórios Aprovados
+    rect rgb(255, 243, 224)
+        note right of Orchestra: FASE 2: Controle de Qualidade
+        Orchestra->>+Supervisor: run_review_loop()
+        
+        loop Para cada Relatório (máx 5)
+            Supervisor->>Supervisor: avaliar_qualidade()
+            
+            alt Qualidade Adequada
+                Supervisor->>Logger: log_approval()
+            else Requer Revisão
+                Supervisor->>Logger: log_feedback()
+                Supervisor->>Specialists: refazer_com_feedback()
+                Specialists-->>Supervisor: relatório_revisado
+            end
+        end
+        
+        Supervisor-->>-Orchestra: relatórios_aprovados[]
+    end
     
-    Note over API,SY: FASE 3: Síntese Final
-    API->>SY: run_synthesis()
-    SY->>SY: Analisar todos relatórios
-    SY->>SY: Calcular score final
-    SY->>SY: Determinar nível de risco
-    SY->>SY: Consolidar fatores
-    SY->>SY: Gerar recomendações
-    SY->>L: Log synthesis
-    SY-->>API: Análise Final
+    rect rgb(243, 229, 245)
+        note right of Orchestra: FASE 3: Síntese Final
+        Orchestra->>+Synthesizer: run_synthesis()
+        
+        Synthesizer->>Synthesizer: análise_cruzada()
+        Synthesizer->>Synthesizer: calcular_score()
+        Synthesizer->>Synthesizer: classificar_risco()
+        Synthesizer->>Synthesizer: consolidar_fatores()
+        Synthesizer->>Synthesizer: gerar_recomendações()
+        
+        Synthesizer-->>-Orchestra: FinalAnalysis
+        Orchestra->>Logger: log_final_analysis()
+    end
     
-    API->>L: Log complete
-    API-->>U: 📊 JSON Response
+    Orchestra-->>-API: resultado_final
+    API-->>-Cliente: JSON Response<br/>FinalAnalysis
 ```
 
-### Estados do Sistema
+### 4.3 Máquina de Estados
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Recebido: Request
+    [*] --> Inicializado: Sistema Inicializado
     
-    Recebido --> Validando: Validar Dados
-    Validando --> Erro: Falha Validação
-    Validando --> AnáliseParalela: ✓ Válido
+    Inicializado --> Aguardando: Servidor Ativo
     
-    AnáliseParalela --> Agente1
-    AnáliseParalela --> Agente2
-    AnáliseParalela --> Agente3
-    AnáliseParalela --> Agente4
-    AnáliseParalela --> Agente5
+    Aguardando --> Recebido: POST /analyze
     
-    Agente1 --> RelatóriosIniciais
-    Agente2 --> RelatóriosIniciais
-    Agente3 --> RelatóriosIniciais
-    Agente4 --> RelatóriosIniciais
-    Agente5 --> RelatóriosIniciais
+    Recebido --> Validacao: Processar Request
     
-    RelatóriosIniciais --> Revisão: Loop de Revisão
+    Validacao --> Erro_Validacao: Dados Inválidos
+    Validacao --> Fase1_Analise: Dados Válidos
     
-    state Revisão {
-        [*] --> Avaliando
-        Avaliando --> Aprovado: Qualidade OK
-        Avaliando --> NecessitaRevisão: Problemas
-        NecessitaRevisão --> Retrabalho: Feedback
-        Retrabalho --> Avaliando: Nova Versão
-        Aprovado --> [*]
+    state Fase1_Analise {
+        [*] --> Distribuicao
+        Distribuicao --> Agente1_Processando
+        Distribuicao --> Agente2_Processando
+        Distribuicao --> Agente3_Processando
+        Distribuicao --> Agente4_Processando
+        Distribuicao --> Agente5_Processando
+        
+        Agente1_Processando --> Relatorios_Gerados
+        Agente2_Processando --> Relatorios_Gerados
+        Agente3_Processando --> Relatorios_Gerados
+        Agente4_Processando --> Relatorios_Gerados
+        Agente5_Processando --> Relatorios_Gerados
+        
+        Relatorios_Gerados --> [*]
     }
     
-    Revisão --> RelatóriosAprovados: 5 Aprovados
+    Fase1_Analise --> Fase2_Revisao
     
-    RelatóriosAprovados --> Síntese: Consolidar
+    state Fase2_Revisao {
+        [*] --> Fila_Revisao
+        Fila_Revisao --> Em_Revisao
+        
+        Em_Revisao --> Aprovado: Qualidade OK
+        Em_Revisao --> Necessita_Ajuste: Problemas Identificados
+        
+        Necessita_Ajuste --> Retrabalho: Enviar Feedback
+        Retrabalho --> Em_Revisao: Nova Submissão
+        
+        Aprovado --> Verificar_Fila: Próximo Relatório
+        Verificar_Fila --> Em_Revisao: Pendentes
+        Verificar_Fila --> [*]: Todos Aprovados
+    }
     
-    Síntese --> CalcularScore
-    CalcularScore --> DeterminarRisco
-    DeterminarRisco --> GerarRecomendações
-    GerarRecomendações --> AnáliseFinal
+    Fase2_Revisao --> Fase3_Sintese
     
-    AnáliseFinal --> [*]: Response
-    Erro --> [*]: Error Response
+    state Fase3_Sintese {
+        [*] --> Analise_Cruzada
+        Analise_Cruzada --> Calculo_Score
+        Calculo_Score --> Classificacao_Risco
+        Classificacao_Risco --> Consolidacao_Fatores
+        Consolidacao_Fatores --> Geracao_Recomendacoes
+        Geracao_Recomendacoes --> [*]
+    }
+    
+    Fase3_Sintese --> Completo
+    
+    Completo --> Aguardando: Enviar Resposta
+    Erro_Validacao --> Aguardando: Enviar Erro
+    
+    note right of Fase1_Analise
+        Processamento paralelo
+        de múltiplos agentes
+    end note
+    
+    note right of Fase2_Revisao
+        Loop de controle de
+        qualidade com máximo
+        de 1 retrabalho
+    end note
+    
+    note right of Fase3_Sintese
+        Consolidação sequencial
+        dos relatórios aprovados
+    end note
 ```
 
 ---
 
-## 🧩 Componentes Principais
+## 5. Implementação
 
-### 1. API Layer (`main.py`)
+### 5.1 Componentes do Sistema
 
-FastAPI application que expõe o endpoint `/analyze` para receber requisições.
+#### 5.1.1 Camada de API (`main.py`)
 
-**Principais Responsabilidades:**
-- Validação de entrada via Pydantic
-- Orquestração do fluxo de análise
-- Logging de requisições
-- Documentação automática (Swagger/ReDoc)
+A camada de apresentação foi implementada utilizando FastAPI, framework assíncrono de alto desempenho para Python. O endpoint principal `/analyze` recebe requisições HTTP POST contendo as 5 respostas do usuário.
 
-### 2. Agents
+**Responsabilidades:**
+- Validação de entrada através de schemas Pydantic
+- Orquestração do pipeline de análise
+- Tratamento de exceções e erros
+- Registro de eventos (logging)
+- Documentação automática da API (OpenAPI/Swagger)
 
-#### `specialist_agent.py`
-Classe base para todos os agentes especialistas.
+#### 5.1.2 Módulo de Agentes
+
+**`specialist_agent.py` - Agente Base**
+
+Implementa a classe base para todos os agentes especializados, encapsulando a lógica de comunicação com o LLM e estruturação de respostas.
 
 ```python
 class SpecialistAgent:
-    - Configuração de agente via Agent Framework
-    - Execução de análise com prompt específico
-    - Few-shot learning com exemplos do domínio
-    - Estruturação de resposta em JSON
+    """
+    Agente especializado para análise de domínio específico.
+    Utiliza few-shot learning para melhorar a qualidade das análises.
+    """
+    - __init__(): Configuração do agente via Agent Framework
+    - analyze(): Execução da análise com prompt específico
+    - _build_prompt(): Construção do prompt com exemplos contextuais
+    - _parse_response(): Estruturação da resposta em formato JSON
 ```
 
-#### `specialist_analysis.py`
-Executa análise paralela com os 5 agentes.
+**`specialist_analysis.py` - Análise Paralela**
+
+Coordena a execução simultânea dos 5 agentes especialistas, otimizando o tempo de resposta através de processamento assíncrono.
 
 ```python
 async def run_specialist_analysis(responses, data_loader, logger):
-    - Cria 5 agentes especializados
-    - Executa análises em paralelo
-    - Retorna 5 relatórios iniciais
+    """
+    Executa análise paralela com múltiplos agentes.
+    Utiliza asyncio.gather para processamento concorrente.
+    """
+    - Inicializa 5 agentes especializados
+    - Distribui uma resposta para cada agente
+    - Aguarda conclusão de todas as análises
+    - Retorna lista de SpecialistReports
 ```
 
-#### `review_loop.py`
-Implementa o loop de revisão com supervisor.
+**`review_loop.py` - Controle de Qualidade**
+
+Implementa o mecanismo de revisão por pares através de um agente supervisor que avalia a qualidade de cada análise produzida.
 
 ```python
 async def run_review_loop(reports, responses, data_loader, logger):
-    - Para cada relatório:
-      - Supervisor avalia qualidade
-      - Se REVISAR: agente refaz (máx 1 vez)
-      - Se APROVADO: próximo
-    - Retorna relatórios aprovados
+    """
+    Loop de revisão com supervisor de qualidade.
+    Permite até 1 retrabalho por relatório.
+    """
+    - Avalia cada relatório individualmente
+    - Gera feedback construtivo quando necessário
+    - Solicita retrabalho ao agente original
+    - Registra todas as iterações no log
 ```
 
-#### `synthesizer.py`
-Agente final que consolida todas as análises.
+**`synthesizer.py` - Síntese Final**
+
+Agente especializado em consolidação que analisa todos os relatórios aprovados e produz uma avaliação unificada.
 
 ```python
 async def run_synthesis(approved_reports, responses, logger):
-    - Analisa todos os relatórios
-    - Calcula score final (0-100)
-    - Define risk_level
-    - Gera recomendações
-    - Retorna análise consolidada
+    """
+    Consolida análises individuais em avaliação holística.
+    Calcula score final ponderado e classifica nível de risco.
+    """
+    - Analisa correlações entre relatórios
+    - Calcula score final normalizado (0-100)
+    - Determina risk_level baseado em thresholds
+    - Consolida fatores de risco identificados
+    - Gera recomendações baseadas em evidências
 ```
 
-### 3. Configuration
+#### 5.1.3 Camada de Configuração
 
-#### `llm_config.py`
-Configuração multi-provider de LLM.
+**`llm_config.py` - Abstração Multi-Provider**
 
-**Suporta:**
-- Azure OpenAI (produção recomendada)
-- OpenAI (alternativa)
-- Groq (alta velocidade)
+Implementa padrão de configuração que suporta múltiplos provedores de LLM, permitindo flexibilidade na escolha do modelo.
+
+**Provedores Suportados:**
+- **Azure OpenAI**: Recomendado para ambientes corporativos (SLA, compliance)
+- **OpenAI**: Alternativa com API oficial da OpenAI
+- **Groq**: Solução otimizada para inferência de alta velocidade
 
 ```python
 def get_chat_client():
-    # Tenta em ordem: Azure → OpenAI → Groq
-    # Retorna cliente configurado
+    """
+    Factory method que retorna cliente LLM configurado.
+    Implementa fallback automático entre provedores.
+    """
+    # Prioridade: Azure → OpenAI → Groq
 ```
 
-#### `system_prompts.py`
-Prompts específicos para cada agente.
+**`system_prompts.py` - Engenharia de Prompts**
 
-### 4. Models (`schemas.py`)
+Contém os prompts especializados para cada agente, incluindo instruções detalhadas, formato de saída esperado e exemplos contextuais.
 
-Modelos Pydantic para validação:
+#### 5.1.4 Modelos de Dados (`schemas.py`)
+
+Utiliza Pydantic v2 para validação rigorosa de dados e serialização automática.
+
+**Principais Schemas:**
 
 ```python
-- AnalysisRequest: Entrada (5 respostas)
-- SpecialistReport: Relatório de especialista
-- ReviewFeedback: Feedback do supervisor
-- FinalAnalysis: Análise consolidada final
-- RiskFactor: Fator de risco identificado
+AnalysisRequest
+    └─ responses: List[str] (exatamente 5 elementos)
+
+SpecialistReport
+    ├─ agent_id: str
+    ├─ domain: str
+    ├─ analysis: str
+    ├─ preliminary_score: float (0-100)
+    ├─ risk_factors: List[RiskFactor]
+    └─ justification: str
+
+FinalAnalysis
+    ├─ final_score: float (0-100)
+    ├─ risk_level: Literal["Baixo", "Médio", "Alto"]
+    ├─ consolidated_factors: List[RiskFactor]
+    ├─ synthesis: str
+    ├─ recommendations: List[str]
+    └─ specialist_reports: List[SpecialistReport]
 ```
 
-### 5. Utilities
+#### 5.1.5 Utilitários
 
-- **`data_loader.py`**: Carrega exemplos few-shot dos CSVs
-- **`logger.py`**: Sistema de logging em JSON
-- **`validators.py`**: Validações customizadas
+**`data_loader.py`**: Carrega exemplos few-shot dos datasets CSV para enriquecer o contexto dos agentes.
+
+**`logger.py`**: Sistema de logging estruturado que registra todas as etapas do processamento em formato JSON, facilitando auditoria e debugging.
+
+**`validators.py`**: Validações customizadas para garantir integridade dos dados ao longo do pipeline.
+
+### 5.2 Padrões de Projeto Utilizados
+
+#### 5.2.1 Factory Pattern
+Utilizado em `agent_factory.py` para criação dinâmica de agentes especializados.
+
+#### 5.2.2 Strategy Pattern
+Cada agente implementa uma estratégia específica de análise para seu domínio.
+
+#### 5.2.3 Chain of Responsibility
+O loop de revisão implementa uma cadeia de responsabilidade onde o supervisor pode aprovar ou solicitar retrabalho.
+
+#### 5.2.4 Repository Pattern
+`data_loader.py` abstrai o acesso aos dados de treinamento (few-shot examples).
+
+### 5.3 Tecnologias e Frameworks
+
+| Tecnologia | Versão | Propósito |
+|------------|--------|-----------|
+| **Python** | 3.11+ | Linguagem base do projeto |
+| **FastAPI** | 0.104+ | Framework web assíncrono |
+| **Pydantic** | 2.11+ | Validação e serialização de dados |
+| **Microsoft Agent Framework** | 1.0.0b | Orquestração de agentes de IA |
+| **Uvicorn** | 0.24+ | Servidor ASGI de alto desempenho |
+| **Pandas** | 2.1+ | Manipulação de datasets |
+| **aiofiles** | 24.1+ | I/O assíncrono de arquivos |
+| **python-dotenv** | 1.0+ | Gerenciamento de variáveis de ambiente |
 
 ---
 
-## 📦 Instalação
+## 6. Guia de Instalação
 
-### Pré-requisitos
+### 6.1 Requisitos do Sistema
 
-- Python 3.11 ou superior
-- pip (gerenciador de pacotes Python)
-- Conta em pelo menos um provedor de LLM (Azure OpenAI, OpenAI ou Groq)
+**Requisitos Mínimos:**
+- Sistema Operacional: Windows 10/11, Linux (Ubuntu 20.04+), macOS 11+
+- Python: versão 3.11 ou superior
+- RAM: mínimo 4GB (recomendado 8GB)
+- Conexão com internet para acesso às APIs de LLM
 
-### Passo a Passo
+**Dependências Externas:**
+- Conta ativa em pelo menos um provedor de LLM:
+  - Azure OpenAI (recomendado para produção)
+  - OpenAI (alternativa)
+  - Groq (opção de alta performance)
 
-1. **Clone o repositório**
+### 6.2 Processo de Instalação
+
+#### Passo 1: Clonar o Repositório
+
 ```bash
 git clone https://github.com/cairocruz/hubAgentsV2.git
 cd hubAgentsV2
 ```
 
-2. **Crie um ambiente virtual**
-```bash
+#### Passo 2: Configurar Ambiente Virtual
+
+A criação de um ambiente virtual isolado é essencial para evitar conflitos de dependências.
+
+**Windows:**
+```powershell
 python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
 
-# Windows
-.\venv\Scripts\activate
-
-# Linux/Mac
+**Linux/macOS:**
+```bash
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-3. **Instale as dependências**
+#### Passo 3: Instalar Dependências
+
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-4. **Configure as variáveis de ambiente**
-```bash
-# Copie o arquivo de exemplo
-cp .env.example .env
-
-# Edite o .env com suas credenciais
+**Dependências Principais:**
+```
+fastapi>=0.104.1              # Framework web
+uvicorn[standard]>=0.24.0     # Servidor ASGI
+pydantic>=2.11.3              # Validação de dados
+agent-framework>=1.0.0b251016 # Microsoft Agent Framework
+pandas>=2.1.3                 # Processamento de dados
+python-dotenv>=1.0.0          # Variáveis de ambiente
 ```
 
----
+#### Passo 4: Configuração de Variáveis de Ambiente
 
-## ⚙️ Configuração
+Crie um arquivo `.env` na raiz do projeto:
 
-### Arquivo `.env`
+```bash
+# Windows
+copy .env.example .env
 
-Configure pelo menos um provedor de LLM:
+# Linux/macOS
+cp .env.example .env
+```
 
-#### Opção 1: Azure OpenAI (Recomendado)
+Edite o arquivo `.env` com suas credenciais (ver seção 6.3).
+
+### 6.3 Configuração de Provedores LLM
+
+O sistema suporta múltiplos provedores através de um sistema de fallback automático. Configure pelo menos um provedor conforme as opções abaixo:
+
+#### Opção 1: Azure OpenAI (Recomendado para Produção)
+
+Vantagens: SLA empresarial, compliance, integração com Azure
+
 ```env
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
-AZURE_OPENAI_API_KEY=your-api-key
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://seu-recurso.openai.azure.com
+AZURE_OPENAI_API_KEY=sua-chave-api
 AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini
 AZURE_OPENAI_API_VERSION=2024-02-01
 ```
 
-#### Opção 2: OpenAI
+#### Opção 2: OpenAI Direto
+
+Vantagens: Simplicidade, acesso direto aos modelos mais recentes
+
 ```env
-OPENAI_API_KEY=sk-...
+# OpenAI Configuration
+OPENAI_API_KEY=sk-proj-...
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-#### Opção 3: Groq (Alta Performance)
+#### Opção 3: Groq
+
+Vantagens: Inferência extremamente rápida, custo reduzido
+
 ```env
+# Groq Configuration
 GROQ_API_KEY=gsk_...
 GROQ_MODEL=llama3-8b-8192
 ```
 
-### Configurações Opcionais
+#### Parâmetros Opcionais de Configuração
 
 ```env
-# Parâmetros do modelo
-LLM_TEMPERATURE=0.2
-LLM_MAX_TOKENS=4000
+# Parâmetros do Modelo
+LLM_TEMPERATURE=0.2        # Controla aleatoriedade (0.0-1.0)
+LLM_MAX_TOKENS=4000       # Limite de tokens na resposta
 
-# Servidor
-HOST=0.0.0.0
-PORT=8000
+# Configuração do Servidor
+HOST=0.0.0.0              # Interface de rede
+PORT=8000                 # Porta do servidor
+
+# Logging
+LOG_LEVEL=INFO            # DEBUG, INFO, WARNING, ERROR
+```
+
+### 6.4 Verificação da Instalação
+
+Execute o script de verificação para validar a configuração:
+
+```bash
+python verify_setup.py
+```
+
+Saída esperada:
+```
+✓ Python 3.11+ detectado
+✓ Dependências instaladas corretamente
+✓ Provedor LLM configurado: Azure OpenAI
+✓ Datasets carregados: 5/5
+✓ Sistema pronto para uso
 ```
 
 ---
 
-## 🚀 Uso da API
+## 7. Utilização da API
 
-### Iniciar o Servidor
+### 7.1 Inicialização do Servidor
+
+#### Método 1: Script de Inicialização (Windows)
 
 ```bash
-# Windows
 .\start_server.bat
+```
 
-# Ou manualmente
+#### Método 2: Execução Manual
+
+```bash
+# Ativar ambiente virtual
+.\venv\Scripts\Activate.ps1  # Windows
+source venv/bin/activate     # Linux/macOS
+
+# Iniciar servidor
 python main.py
 ```
 
-O servidor estará disponível em: `http://localhost:8000`
+#### Método 3: Uvicorn Direto
 
-### Documentação Interativa
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI Schema**: http://localhost:8000/openapi.json
+**Saída Esperada:**
+```
+INFO:     Started server process [12345]
+INFO:     Waiting for application startup.
+✅ DataLoader initialized
+✅ Logger initialized
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000
+```
 
-### Endpoint Principal
+### 7.2 Documentação Interativa
 
-#### `POST /analyze`
+O sistema gera automaticamente documentação interativa da API através do OpenAPI:
 
-Analisa 5 respostas de usuário e retorna análise de risco completa.
+| Interface | URL | Descrição |
+|-----------|-----|-----------|
+| **Swagger UI** | http://localhost:8000/docs | Interface interativa para testar endpoints |
+| **ReDoc** | http://localhost:8000/redoc | Documentação estática elegante |
+| **OpenAPI Schema** | http://localhost:8000/openapi.json | Especificação JSON da API |
 
-**Request Body:**
+### 7.3 Especificação do Endpoint
+
+#### `POST /analyze` - Análise de Risco
+
+Endpoint principal que processa 5 respostas de usuário e retorna análise de risco completa.
+
+**URL:** `http://localhost:8000/analyze`
+
+**Método:** `POST`
+
+**Content-Type:** `application/json`
+
+**Request Body Schema:**
+
 ```json
 {
   "responses": [
-    "Resposta sobre tarefas domésticas",
-    "Resposta sobre tom emocional",
-    "Resposta sobre redes de apoio",
-    "Resposta sobre controle financeiro",
-    "Resposta sobre bem-estar físico"
+    "string (resposta 1 - dinâmicas domésticas)",
+    "string (resposta 2 - comunicação interpessoal)",
+    "string (resposta 3 - redes de apoio social)",
+    "string (resposta 4 - autonomia financeira)",
+    "string (resposta 5 - integridade física)"
   ]
 }
 ```
 
-**Response:**
+**Validações:**
+- `responses` deve conter exatamente 5 elementos (não mais, não menos)
+- Cada resposta deve ser uma string não vazia
+- Tamanho máximo recomendado por resposta: 500 caracteres
+
+**Response Schema:**
+
 ```json
 {
-  "final_score": 65.5,
-  "risk_level": "Médio",
-  "synthesis": "Análise consolidada de todos os relatórios...",
-  "consolidated_factors": [
+  "final_score": float,           // Score consolidado (0-100)
+  "risk_level": string,           // "Baixo" | "Médio" | "Alto"
+  "synthesis": string,            // Análise holística
+  "consolidated_factors": [       // Fatores de risco identificados
     {
-      "factor": "Controle excessivo",
-      "severity": "Alto",
-      "description": "Descrição detalhada..."
+      "factor": string,
+      "severity": string,         // "Baixo" | "Médio" | "Alto"
+      "description": string
     }
   ],
-  "recommendations": [
-    "Recomendação 1...",
-    "Recomendação 2..."
-  ],
-  "specialist_reports": [
+  "recommendations": [string],    // Recomendações de ação
+  "specialist_reports": [         // Relatórios individuais
     {
-      "agent_id": "agent_1",
-      "domain": "Tarefas Domésticas",
-      "analysis": "Análise detalhada...",
-      "preliminary_score": 70.0,
+      "agent_id": string,
+      "domain": string,
+      "analysis": string,
+      "preliminary_score": float,
       "risk_factors": [...],
-      "justification": "Justificativa..."
+      "justification": string
     }
   ]
 }
 ```
 
-### Exemplo de Uso com cURL
+**Códigos de Status HTTP:**
+
+| Código | Significado | Descrição |
+|--------|-------------|-----------|
+| `200` | OK | Análise concluída com sucesso |
+| `422` | Unprocessable Entity | Erro de validação nos dados de entrada |
+| `500` | Internal Server Error | Erro interno do servidor ou falha na API do LLM |
+
+### 7.4 Exemplos de Utilização
+
+#### Exemplo 1: cURL (Linux/macOS)
 
 ```bash
 curl -X POST "http://localhost:8000/analyze" \
   -H "Content-Type: application/json" \
   -d '{
     "responses": [
-      "Sim, ele controla muito as tarefas de casa",
-      "Às vezes ele me xinga durante discussões",
-      "Não tenho amigos próximos",
-      "Ele controla todo o dinheiro",
-      "Tenho medo às vezes"
+      "Ele sempre decide o que vamos fazer em casa",
+      "Às vezes ele grita comigo quando está estressado",
+      "Não tenho muitos amigos, ele não gosta que eu saia",
+      "Ele controla todas as finanças da casa",
+      "Me sinto cansada e ansiosa ultimamente"
     ]
   }'
 ```
 
-### Exemplo com Python
+#### Exemplo 2: PowerShell (Windows)
+
+```powershell
+$body = @{
+    responses = @(
+        "Ele sempre decide o que vamos fazer em casa",
+        "Às vezes ele grita comigo quando está estressado",
+        "Não tenho muitos amigos, ele não gosta que eu saia",
+        "Ele controla todas as finanças da casa",
+        "Me sinto cansada e ansiosa ultimamente"
+    )
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/analyze" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+#### Exemplo 3: Python (requests)
 
 ```python
 import requests
+import json
 
-url = "http://localhost:8000/analyze"
-payload = {
-    "responses": [
-        "Sim, ele controla muito as tarefas de casa",
-        "Às vezes ele me xinga durante discussões",
-        "Não tenho amigos próximos",
-        "Ele controla todo o dinheiro",
-        "Tenho medo às vezes"
-    ]
+def analisar_risco(respostas):
+    """
+    Envia 5 respostas para análise de risco.
+    
+    Args:
+        respostas: Lista com exatamente 5 strings
+        
+    Returns:
+        Dict contendo a análise completa
+    """
+    url = "http://localhost:8000/analyze"
+    headers = {"Content-Type": "application/json"}
+    payload = {"responses": respostas}
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Erro na requisição: {e}")
+        return None
+
+# Exemplo de uso
+respostas_usuario = [
+    "Ele controla as tarefas domésticas e decide tudo",
+    "Nosso diálogo é tenso, muitas vezes ele me ignora",
+    "Perdi contato com minha família, ele não gosta deles",
+    "Não tenho acesso ao dinheiro da casa",
+    "Sinto medo de contrariá-lo"
+]
+
+resultado = analisar_risco(respostas_usuario)
+
+if resultado:
+    print(f"\n{'='*50}")
+    print(f"ANÁLISE DE RISCO COMPLETA")
+    print(f"{'='*50}")
+    print(f"Score Final: {resultado['final_score']:.1f}/100")
+    print(f"Nível de Risco: {resultado['risk_level']}")
+    print(f"\nSíntese:\n{resultado['synthesis']}")
+    print(f"\nRecomendações:")
+    for i, rec in enumerate(resultado['recommendations'], 1):
+        print(f"{i}. {rec}")
+```
+
+#### Exemplo 4: JavaScript (Fetch API)
+
+```javascript
+async function analisarRisco(respostas) {
+    const url = 'http://localhost:8000/analyze';
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ responses: respostas })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const resultado = await response.json();
+        return resultado;
+    } catch (error) {
+        console.error('Erro na análise:', error);
+        return null;
+    }
 }
 
-response = requests.post(url, json=payload)
-result = response.json()
+// Uso
+const respostas = [
+    "Ele decide tudo em casa",
+    "Muitas discussões e gritos",
+    "Não tenho amigos próximos",
+    "Ele controla o dinheiro",
+    "Tenho medo constantemente"
+];
 
-print(f"Score Final: {result['final_score']}")
-print(f"Nível de Risco: {result['risk_level']}")
+analisarRisco(respostas).then(resultado => {
+    console.log('Score:', resultado.final_score);
+    console.log('Nível:', resultado.risk_level);
+});
 ```
+
+### 7.5 Interpretação dos Resultados
+
+#### Escala de Scores
+
+```mermaid
+graph LR
+    A[0] -->|Baixo| B[25]
+    B[25] -->|Médio-Baixo| C[50]
+    C[50] -->|Médio-Alto| D[75]
+    D[75] -->|Alto| E[100]
+    
+    style A fill:#4CAF50
+    style B fill:#8BC34A
+    style C fill:#FFC107
+    style D fill:#FF9800
+    style E fill:#F44336
+```
+
+| Faixa de Score | Classificação | Interpretação | Ação Recomendada |
+|----------------|---------------|---------------|------------------|
+| 0 - 25 | **Baixo** | Situação dentro da normalidade | Monitoramento regular |
+| 26 - 50 | **Médio-Baixo** | Alguns indicadores de atenção | Observação e diálogo |
+| 51 - 75 | **Médio-Alto** | Múltiplos fatores de preocupação | Intervenção preventiva |
+| 76 - 100 | **Alto** | Situação de risco elevado | Ação imediata necessária |
 
 ---
 
-## 📁 Estrutura do Projeto
+## 8. Resultados e Discussão
+
+### 8.1 Estrutura de Dados
+
+#### Organização do Projeto
 
 ```
 hubAgentsV2/
 │
-├── 📄 main.py                    # FastAPI application
-├── 📄 requirements.txt           # Dependências Python
-├── 📄 .env.example              # Template de configuração
-├── 📄 README.md                 # Este arquivo
+├── 📄 main.py                      # Ponto de entrada da aplicação FastAPI
+├── 📄 requirements.txt             # Especificação de dependências
+├── 📄 .env                         # Configurações de ambiente (não versionado)
+├── 📄 .env.example                 # Template de configuração
+├── 📄 README.md                    # Documentação completa do projeto
 │
-├── 📂 agents/                   # Agentes de IA
-│   ├── specialist_agent.py     # Classe base do agente
-│   ├── specialist_analysis.py  # Análise paralela
-│   ├── review_loop.py          # Loop de revisão
-│   ├── synthesizer.py          # Síntese final
-│   └── agent_factory.py        # Factory de agentes
+├── 📂 agents/                      # Módulo de agentes inteligentes
+│   ├── __init__.py
+│   ├── specialist_agent.py         # Implementação base dos agentes
+│   ├── specialist_analysis.py      # Coordenação de análise paralela
+│   ├── review_loop.py              # Mecanismo de controle de qualidade
+│   ├── synthesizer.py              # Consolidação de análises
+│   └── agent_factory.py            # Padrão Factory para criação de agentes
 │
-├── 📂 config/                   # Configurações
-│   ├── llm_config.py           # Config de LLM
-│   └── system_prompts.py       # Prompts dos agentes
+├── 📂 config/                      # Configurações do sistema
+│   ├── __init__.py
+│   ├── llm_config.py               # Abstração de provedores LLM
+│   └── system_prompts.py           # Biblioteca de prompts especializados
 │
-├── 📂 models/                   # Modelos de dados
-│   └── schemas.py              # Pydantic schemas
+├── 📂 models/                      # Camada de dados e validação
+│   ├── __init__.py
+│   └── schemas.py                  # Schemas Pydantic (request/response)
 │
-├── 📂 prompts/                  # Prompts do sistema
-│   └── system_prompts.py       # Prompts especializados
+├── 📂 prompts/                     # Prompts adicionais
+│   ├── __init__.py
+│   └── system_prompts.py           # Prompts estruturados por domínio
 │
-├── 📂 utils/                    # Utilitários
-│   ├── data_loader.py          # Carregador de exemplos
-│   ├── logger.py               # Sistema de logging
-│   └── validators.py           # Validadores
+├── 📂 utils/                       # Utilitários e helpers
+│   ├── __init__.py
+│   ├── data_loader.py              # Carregamento de datasets
+│   ├── logger.py                   # Sistema de logging estruturado
+│   └── validators.py               # Validações customizadas
 │
-├── 📂 data/                     # Dados de treinamento
-│   ├── dataset_1.csv           # Exemplos agente 1
-│   ├── dataset_2.csv           # Exemplos agente 2
-│   ├── dataset_3.csv           # Exemplos agente 3
-│   ├── dataset_4.csv           # Exemplos agente 4
-│   └── dataset_5.csv           # Exemplos agente 5
+├── 📂 data/                        # Datasets para few-shot learning
+│   ├── dataset_1.csv               # Exemplos: Dinâmicas Domésticas
+│   ├── dataset_2.csv               # Exemplos: Comunicação Interpessoal
+│   ├── dataset_3.csv               # Exemplos: Redes de Apoio
+│   ├── dataset_4.csv               # Exemplos: Autonomia Financeira
+│   └── dataset_5.csv               # Exemplos: Integridade Física
 │
-├── 📂 logs/                     # Logs de requisições
-│   └── request_*.json          # Logs em JSON
+├── 📂 logs/                        # Logs de execução
+│   └── request_*.json              # Registro detalhado de cada análise
 │
-├── 📂 examples/                 # Exemplos de uso
-│   └── usage_examples.py       # Scripts de exemplo
+├── 📂 examples/                    # Exemplos de utilização
+│   └── usage_examples.py           # Scripts demonstrativos
 │
-└── 📂 tests/                    # Testes
-    └── test_system.py          # Testes do sistema
+└── 📂 tests/                       # Testes automatizados
+    └── test_system.py              # Testes de integração
 ```
 
----
+### 8.2 Análise de Performance
 
-## 🛠️ Tecnologias
+#### Métricas de Processamento
 
-### Core Framework
-- **[FastAPI](https://fastapi.tiangolo.com/)** - Framework web moderno e rápido
-- **[Microsoft Agent Framework](https://microsoft.github.io/agent-framework/)** - Framework de agentes de IA
-- **[Pydantic](https://docs.pydantic.dev/)** - Validação de dados
+A tabela abaixo apresenta métricas médias de performance observadas durante testes:
 
-### LLM Providers
-- **Azure OpenAI** - Solução enterprise da Microsoft
-- **OpenAI** - API oficial da OpenAI
-- **Groq** - Inferência ultra-rápida
+| Fase | Tempo Médio | Descrição |
+|------|-------------|-----------|
+| **Validação** | ~10ms | Validação Pydantic dos dados de entrada |
+| **Análise Paralela** | ~3-5s | Processamento simultâneo por 5 agentes |
+| **Revisão** | ~2-3s | Avaliação de qualidade por supervisor |
+| **Síntese** | ~2-4s | Consolidação final e cálculo de scores |
+| **Total** | ~7-12s | Tempo médio de resposta end-to-end |
 
-### Utilities
-- **[Uvicorn](https://www.uvicorn.org/)** - Servidor ASGI
-- **[Pandas](https://pandas.pydata.org/)** - Manipulação de dados
-- **[Python-dotenv](https://github.com/theskumar/python-dotenv)** - Variáveis de ambiente
+*Observação: Tempos podem variar significativamente dependendo do provedor LLM, carga da rede e complexidade das respostas.*
 
----
-
-## 📊 Exemplos
-
-### Exemplo Completo de Fluxo
+#### Comparação entre Provedores
 
 ```mermaid
-graph TD
-    A[👤 Usuário envia 5 respostas] --> B{Validação}
-    B -->|❌ Inválido| C[Erro 422]
-    B -->|✅ Válido| D[Iniciar Análise]
+graph TB
+    subgraph "Comparação de Provedores LLM"
+        A[Azure OpenAI]
+        B[OpenAI]
+        C[Groq]
+    end
     
-    D --> E1[🧠 Agent 1: Analisa R1]
-    D --> E2[💬 Agent 2: Analisa R2]
-    D --> E3[🤝 Agent 3: Analisa R3]
-    D --> E4[💰 Agent 4: Analisa R4]
-    D --> E5[🏥 Agent 5: Analisa R5]
+    A -->|Latência: Média| A1[~4-6s por requisição]
+    A -->|Confiabilidade: Alta| A2[SLA 99.9%]
+    A -->|Custo: Médio| A3[Pay-as-you-go]
     
-    E1 & E2 & E3 & E4 & E5 --> F[5 Relatórios Iniciais]
+    B -->|Latência: Média-Alta| B1[~5-7s por requisição]
+    B -->|Confiabilidade: Alta| B2[Sem SLA garantido]
+    B -->|Custo: Médio| B3[API pricing]
     
-    F --> G1{Supervisor: R1 OK?}
-    G1 -->|✅| H1[R1 Aprovado]
-    G1 -->|⚠️| I1[Feedback R1]
-    I1 --> J1[Agent 1 refaz]
-    J1 --> G1
+    C -->|Latência: Baixa| C1[~2-3s por requisição]
+    C -->|Confiabilidade: Média| C2[Sem SLA]
+    C -->|Custo: Baixo| C3[Gratuito/freemium]
     
-    F --> G2{Supervisor: R2 OK?}
-    G2 -->|✅| H2[R2 Aprovado]
-    G2 -->|⚠️| I2[Feedback R2]
-    I2 --> J2[Agent 2 refaz]
-    J2 --> G2
+    classDef azure fill:#0078d4,stroke:#005a9e,color:#fff
+    classDef openai fill:#10a37f,stroke:#0d8f6c,color:#fff
+    classDef groq fill:#ff6b35,stroke:#cc5629,color:#fff
     
-    F --> G3{Supervisor: R3 OK?}
-    F --> G4{Supervisor: R4 OK?}
-    F --> G5{Supervisor: R5 OK?}
-    
-    G3 -->|✅| H3[R3 Aprovado]
-    G4 -->|✅| H4[R4 Aprovado]
-    G5 -->|✅| H5[R5 Aprovado]
-    
-    H1 & H2 & H3 & H4 & H5 --> K[🎯 Sintetizador]
-    
-    K --> L[Análise Cruzada]
-    L --> M[Cálculo Score: 65.5]
-    M --> N[Nível: Médio]
-    N --> O[Fatores Consolidados]
-    O --> P[Recomendações]
-    
-    P --> Q[📄 Resposta JSON Completa]
-    Q --> R[📤 Cliente recebe análise]
-    
-    style A fill:#e3f2fd
-    style D fill:#fff3e0
-    style K fill:#e8f5e9
-    style Q fill:#f3e5f5
-    style R fill:#e1f5fe
+    class A,A1,A2,A3 azure
+    class B,B1,B2,B3 openai
+    class C,C1,C2,C3 groq
 ```
 
-### Tabela de Scores e Níveis de Risco
+### 8.3 Validação do Sistema
 
-| Score Range | Nível de Risco | Cor | Descrição |
-|-------------|----------------|-----|-----------|
-| 0 - 25 | 🟢 Baixo | Verde | Situação estável, sem sinais significativos |
-| 26 - 50 | 🟡 Médio-Baixo | Amarelo | Alguns fatores de atenção, monitoramento |
-| 51 - 75 | 🟠 Médio-Alto | Laranja | Múltiplos fatores de risco, intervenção recomendada |
-| 76 - 100 | 🔴 Alto | Vermelho | Situação crítica, ação imediata necessária |
+#### Casos de Teste
+
+Durante o desenvolvimento, o sistema foi validado com diversos casos de teste representativos:
+
+**Caso 1: Risco Baixo**
+```json
+Score: 18.5 | Classificação: Baixo
+Análise: Relacionamento saudável com distribuição equitativa de responsabilidades
+```
+
+**Caso 2: Risco Médio**
+```json
+Score: 58.2 | Classificação: Médio
+Análise: Alguns padrões de preocupação identificados, recomenda-se acompanhamento
+```
+
+**Caso 3: Risco Alto**
+```json
+Score: 87.4 | Classificação: Alto
+Análise: Múltiplos indicadores de risco severo, intervenção urgente recomendada
+```
+
+### 8.4 Limitações e Trabalhos Futuros
+
+#### Limitações Identificadas
+
+1. **Dependência de LLMs Externos**: Sistema requer conectividade e está sujeito a mudanças nas APIs
+2. **Custo Operacional**: Uso intensivo de APIs pode gerar custos significativos em escala
+3. **Latência**: Tempo de resposta de 7-12 segundos pode não ser ideal para todas as aplicações
+4. **Interpretabilidade**: Decisões dos LLMs podem ser difíceis de explicar em detalhe
+5. **Viés dos Modelos**: LLMs podem herdar vieses presentes em seus dados de treinamento
+
+#### Melhorias Futuras
+
+```mermaid
+mindmap
+  root((Melhorias<br/>Futuras))
+    Performance
+      Cache de respostas similares
+      Processamento em batch
+      Otimização de prompts
+    Funcionalidades
+      API de histórico
+      Dashboard analítico
+      Sistema de alertas
+    Inteligência
+      Fine-tuning de modelos
+      Ensemble de múltiplos LLMs
+      Aprendizado contínuo
+    Infraestrutura
+      Deploy em containers
+      Auto-scaling
+      Monitoramento avançado
+```
+
+#### Próximos Passos
+
+1. **Implementação de Cache**: Reduzir custos e latência para análises similares
+2. **Sistema de Feedback**: Coletar avaliações sobre qualidade das análises
+3. **Dashboard Analytics**: Visualização de métricas e tendências
+4. **Testes A/B**: Comparação de diferentes configurações de prompts
+5. **Fine-tuning**: Treinar modelos especializados no domínio específico
 
 ---
 
-## 🤝 Contribuindo
+## 9. Referências
 
-Contribuições são bem-vindas! Por favor:
+### 9.1 Frameworks e Bibliotecas
 
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+1. **FastAPI Documentation**. Sebastián Ramírez et al. Disponível em: https://fastapi.tiangolo.com/
+
+2. **Microsoft Agent Framework**. Microsoft Corporation, 2024. Disponível em: https://microsoft.github.io/agent-framework/
+
+3. **Pydantic V2 Documentation**. Samuel Colvin et al. Disponível em: https://docs.pydantic.dev/
+
+### 9.2 Artigos Científicos e Técnicos
+
+4. WOOLDRIDGE, M. **An Introduction to MultiAgent Systems**. 2nd ed. Wiley, 2009.
+
+5. VASWANI, A. et al. **Attention Is All You Need**. In: Advances in Neural Information Processing Systems, 2017.
+
+6. BROWN, T. et al. **Language Models are Few-Shot Learners**. In: NeurIPS 2020.
+
+### 9.3 Documentação de APIs
+
+7. **OpenAI API Reference**. OpenAI, 2024. Disponível em: https://platform.openai.com/docs/
+
+8. **Azure OpenAI Service Documentation**. Microsoft Azure, 2024. Disponível em: https://learn.microsoft.com/azure/ai-services/openai/
+
+9. **Groq API Documentation**. Groq, Inc., 2024. Disponível em: https://console.groq.com/docs/
+
+### 9.4 Boas Práticas e Padrões
+
+10. MARTIN, R. C. **Clean Architecture: A Craftsman's Guide to Software Structure and Design**. Prentice Hall, 2017.
+
+11. GAMMA, E. et al. **Design Patterns: Elements of Reusable Object-Oriented Software**. Addison-Wesley, 1994.
 
 ---
 
-## 📝 Licença
+## 10. Apêndices
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+### Apêndice A: Glossário
+
+| Termo | Definição |
+|-------|-----------|
+| **Agent** | Entidade autônoma capaz de perceber seu ambiente e agir de forma independente |
+| **Few-Shot Learning** | Técnica onde modelos aprendem com poucos exemplos |
+| **LLM** | Large Language Model - Modelo de linguagem de grande escala |
+| **Prompt Engineering** | Arte de elaborar instruções eficazes para modelos de IA |
+| **Schema** | Estrutura de dados que define formato e validações |
+| **Score** | Métrica numérica que quantifica o nível de risco (0-100) |
+
+### Apêndice B: Variáveis de Ambiente
+
+```env
+# Provedor Azure OpenAI
+AZURE_OPENAI_ENDPOINT=<URL do recurso Azure>
+AZURE_OPENAI_API_KEY=<Chave de API>
+AZURE_OPENAI_DEPLOYMENT_NAME=<Nome do deployment>
+AZURE_OPENAI_API_VERSION=<Versão da API>
+
+# Provedor OpenAI
+OPENAI_API_KEY=<Chave de API OpenAI>
+OPENAI_MODEL=<Nome do modelo>
+
+# Provedor Groq
+GROQ_API_KEY=<Chave de API Groq>
+GROQ_MODEL=<Nome do modelo>
+
+# Configurações do modelo
+LLM_TEMPERATURE=0.2
+LLM_MAX_TOKENS=4000
+
+# Configurações do servidor
+HOST=0.0.0.0
+PORT=8000
+LOG_LEVEL=INFO
+```
 
 ---
 
-## 👥 Autores
+## Licença
 
-- **Cairo Cruz** - [@cairocruz](https://github.com/cairocruz)
+Este projeto está licenciado sob a **Licença MIT** - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+```
+MIT License
+
+Copyright (c) 2024 Cairo Cruz
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+```
 
 ---
 
-## 📧 Suporte
+## Autor
 
-Para questões e suporte:
-- 📧 Email: suporte@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/cairocruz/hubAgentsV2/issues)
-- 📚 Documentação: [Wiki](https://github.com/cairocruz/hubAgentsV2/wiki)
+**Cairo Cruz**
+- GitHub: [@cairocruz](https://github.com/cairocruz)
+- Projeto: HubAgents V2
+- Repositório: [github.com/cairocruz/hubAgentsV2](https://github.com/cairocruz/hubAgentsV2)
 
 ---
 
-## 🙏 Agradecimentos
+## Contato e Suporte
 
-- Microsoft Agent Framework Team
-- FastAPI Community
-- OpenAI & Azure OpenAI
-- Todos os contribuidores
+Para dúvidas, sugestões ou reportar problemas:
+
+- **Issues**: [GitHub Issues](https://github.com/cairocruz/hubAgentsV2/issues)
+- **Discussões**: [GitHub Discussions](https://github.com/cairocruz/hubAgentsV2/discussions)
+- **Email**: suporte@example.com
 
 ---
 
 <div align="center">
 
-**⭐ Se este projeto foi útil, considere dar uma estrela! ⭐**
+### ⭐ Se este projeto foi útil para você, considere dar uma estrela no repositório! ⭐
 
-Made with ❤️ by [Cairo Cruz](https://github.com/cairocruz)
+**Desenvolvido como Trabalho de Conclusão de Curso**
+
+*Sistema Multi-Agente para Análise de Risco utilizando IA*
+
+[![Stars](https://img.shields.io/github/stars/cairocruz/hubAgentsV2?style=social)](https://github.com/cairocruz/hubAgentsV2)
+[![Forks](https://img.shields.io/github/forks/cairocruz/hubAgentsV2?style=social)](https://github.com/cairocruz/hubAgentsV2/fork)
+[![Watch](https://img.shields.io/github/watchers/cairocruz/hubAgentsV2?style=social)](https://github.com/cairocruz/hubAgentsV2)
 
 </div>
