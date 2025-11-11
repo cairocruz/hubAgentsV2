@@ -1148,48 +1148,134 @@ Score: 87.4 | Classificação: Alto
 Análise: Múltiplos indicadores de risco severo, intervenção urgente recomendada
 ```
 
-### 8.4 Limitações e Trabalhos Futuros
-
-#### Limitações Identificadas
-
-1. **Dependência de LLMs Externos**: Sistema requer conectividade e está sujeito a mudanças nas APIs
-2. **Custo Operacional**: Uso intensivo de APIs pode gerar custos significativos em escala
-3. **Latência**: Tempo de resposta de 7-12 segundos pode não ser ideal para todas as aplicações
-4. **Interpretabilidade**: Decisões dos LLMs podem ser difíceis de explicar em detalhe
-5. **Viés dos Modelos**: LLMs podem herdar vieses presentes em seus dados de treinamento
-
-#### Melhorias Futuras
-
-```mermaid
-mindmap
-  root((Melhorias<br/>Futuras))
-    Performance
-      Cache de respostas similares
-      Processamento em batch
-      Otimização de prompts
-    Funcionalidades
-      API de histórico
-      Dashboard analítico
-      Sistema de alertas
-    Inteligência
-      Fine-tuning de modelos
-      Ensemble de múltiplos LLMs
-      Aprendizado contínuo
-    Infraestrutura
-      Deploy em containers
-      Auto-scaling
-      Monitoramento avançado
+### 8.4 Resposta esperada
+```json
+{
+  "final_score": 82,
+  "risk_level": "Alto",
+  "consolidated_factors": [
+    {
+      "factor": "Agressão Verbal e Desrespeito",
+      "severity": "Alto",
+      "description": "A ocorrência de xingamentos e uso de linguagem ofensiva é um indicador de violência emocional e pode ser um sinal de alerta para outros tipos de violência."
+    },
+    {
+      "factor": "Intimidação Física Indireta e Perda de Controle Emocional",
+      "severity": "Alto",
+      "description": "A quebra de objetos pode ser vista como uma forma de expressar raiva de maneira controlada, mas ainda assim ameaçadora, indicando um risco alto de violência doméstica."
+    },
+    {
+      "factor": "Isolamento Social e Controle de Vínculos",
+      "severity": "Alto",
+      "description": "O parceiro não gosta quando a usuária sai com amigas, o que pode levar a uma restrição da liberdade e do contato social da usuária, aumentando o risco de isolamento social."
+    },
+    {
+      "factor": "Preocupação com o Comportamento de Outra Pessoa e Ambiente de Estresse ou Tensão",
+      "severity": "Alto",
+      "description": "A preocupação com o comportamento de outra pessoa, especialmente em um contexto de violência doméstica, pode ser um sinal de estresse ou ansiedade intensa, aumentando o risco de problemas de saúde mental."
+    }
+  ],
+  "synthesis": "A análise holística integrando todos os domínios indica um alto nível de risco para a segurança emocional e física da usuária. Os relatórios dos agentes especialistas destacam a presença de agressão verbal, desrespeito, intimidação física indireta, perda de controle emocional, isolamento social, controle de vínculos e preocupação com o comportamento de outra pessoa, todos esses fatores contribuem para um ambiente de estresse e tensão.",
+  "recommendations": [
+    "Procurar apoio emocional de amigos, familiares ou profissionais de saúde mental.",
+    "Considerar a possibilidade de buscar ajuda de organizações especializadas em violência doméstica.",
+    "Desenvolver estratégias de coping para lidar com o estresse e a ansiedade.",
+    "Estabelecer uma rede de apoio para ajudar a usuária a manter o contato social e a liberdade.",
+    "Avaliar a possibilidade de intervenção profissional para mitigar os riscos identificados e garantir a segurança da usuária."
+  ],
+  "specialist_reports": [
+    {
+      "agent_id": "1",
+      "domain": "Rotina, Sobrecarga e Divisão de Tarefas Domésticas",
+      "analysis": "O relato da usuária não apresenta diretamente fatores relacionados à rotina, sobrecarga ou divisão de tarefas domésticas, mas sim uma situação de agressão verbal.",
+      "preliminary_score": 80,
+      "risk_factors": [
+        {
+          "factor": "Agressão Verbal",
+          "severity": "Alto",
+          "description": "A ocorrência de xingamentos durante discussões é um indicador de violência emocional e pode ser um sinal de alerta para outros tipos de violência."
+        },
+        {
+          "factor": "Desrespeito",
+          "severity": "Alto",
+          "description": "O uso de linguagem ofensiva pode ser um indicador de desrespeito e falta de consideração pelo bem-estar emocional do parceiro."
+        }
+      ],
+      "justification": "Embora o relato não esteja diretamente relacionado ao domínio de expertise, a presença de agressão verbal é um fator de risco significativo para a segurança emocional e física da usuária. A análise considerou a gravidade da situação e a possibilidade de que esse comportamento seja um indicador de outros problemas mais profundos na relação."
+    },
+    {
+      "agent_id": "2",
+      "domain": "Tom Emocional, Comunicação e Intimidação",
+      "analysis": "O relato da usuária indica um comportamento agressivo do parceiro, caracterizado pela quebra de objetos quando irritado, o que sugere um controle emocional deficiente e possivelmente um padrão de intimidação.",
+      "preliminary_score": 80,
+      "risk_factors": [
+        {
+          "factor": "Intimidação Física Indireta",
+          "severity": "Alto",
+          "description": "A quebra de objetos pode ser vista como uma forma de expressar raiva de maneira controlada, mas ainda assim ameaçadora, indicando um risco alto de violência doméstica."
+        },
+        {
+          "factor": "Perda de Controle Emocional",
+          "severity": "Alto",
+          "description": "A reação extrema de quebrar objetos quando irritado sugere uma dificuldade significativa em gerenciar emoções negativas de maneira saudável."
+        }
+      ],
+      "justification": "O relato apresenta um claro sinal de alerta para violência doméstica, pois a destruição de propriedade pode ser um precursor para agressão física direta contra a parceira. Além disso, a falta de controle emocional e a escolha de expressar raiva de maneira destrutiva indicam um padrão de comportamento que pode colocar a usuária em risco. Portanto, o score preliminar de risco é alto, refletindo a gravidade do comportamento descrito."
+    },
+    {
+      "agent_id": "3",
+      "domain": "Redes de Apoio, Isolamento Social e Vínculos",
+      "analysis": "O relato da usuária indica um possível controle sobre suas interações sociais, o que pode ser um sinal de isolamento social induzido. A disconformidade do parceiro com a socialização da usuária pode ser um fator de risco para violência doméstica.",
+      "preliminary_score": 70,
+      "risk_factors": [
+        {
+          "factor": "Isolamento Social",
+          "severity": "Alto",
+          "description": "O parceiro não gosta quando a usuária sai com amigas, o que pode levar a uma restrição da liberdade e do contato social da usuária."
+        },
+        {
+          "factor": "Controle de Vínculos",
+          "severity": "Alto",
+          "description": "A atitude do parceiro pode ser vista como uma tentativa de controlar os vínculos sociais da usuária, o que é um comportamento comum em relações abusivas."
+        }
+      ],
+      "justification": "A análise se baseia na comparação com exemplos anteriores, como o EXEMPLO 5, onde o parceiro também restringia a liberdade da usuária. Além disso, a menção à desaprovação do parceiro em relação às amizades da usuária é um sinal de alerta para isolamento social e controle. O score preliminar de risco é alto devido à possibilidade de isolamento e controle, fatores que podem contribuir para um ambiente de violência doméstica."
+    },
+    {
+      "agent_id": "4",
+      "domain": "Controle Financeiro e Dependência Econômica",
+      "analysis": "O relato não apresenta indícios de controle financeiro ou dependência econômica. A menção à amiga próxima que oferece apoio sugere uma rede de suporte, o que é positivo, mas não se relaciona diretamente com o domínio de controle financeiro e dependência econômica.",
+      "preliminary_score": 0,
+      "risk_factors": [],
+      "justification": "O relato não contém informações que indiquem qualquer forma de controle financeiro, dependência econômica, ou violência patrimonial. A falta de detalhes sobre a situação financeira ou sobre qualquer tipo de coerção econômica torna impossível identificar fatores de risco específicos dentro do meu domínio de especialização. Portanto, o score preliminar de risco é zero, pois não há evidências de risco no relato fornecido."
+    },
+    {
+      "agent_id": "5",
+      "domain": "Bem-estar Físico, Psicológico e Saúde Mental",
+      "analysis": "O relato da usuária indica uma preocupação significativa com o comportamento de outra pessoa, o que pode sugerir um ambiente de estresse ou tensão. Essa preocupação pode ter um impacto indireto na saúde mental da usuária, aumentando o risco de ansiedade, depressão ou outros problemas de saúde mental. Além disso, o contexto de violência doméstica pode exacerbate esses fatores, tornando a situação ainda mais crítica. A falta de detalhes específicos sobre o bem-estar físico, psicológico ou saúde mental da usuária não diminui a importância de considerar esses fatores em uma análise holística.",
+      "preliminary_score": 50,
+      "risk_factors": [
+        {
+          "factor": "Preocupação com o comportamento de outra pessoa",
+          "severity": "Alto",
+          "description": "A preocupação com o comportamento de outra pessoa, especialmente em um contexto de violência doméstica, pode ser um sinal de estresse ou ansiedade intensa, aumentando o risco de problemas de saúde mental."
+        },
+        {
+          "factor": "Ambiente de estresse ou tensão",
+          "severity": "Alto",
+          "description": "Um ambiente de estresse ou tensão, potencialmente exacerbado pelo contexto de violência doméstica, pode afetar negativamente o bem-estar físico e psicológico, aumentando o risco de problemas de saúde mental, como depressão, ansiedade ou transtornos de estresse pós-traumático."
+        },
+        {
+          "factor": "Impacto indireto na saúde mental",
+          "severity": "Médio",
+          "description": "A preocupação com o comportamento de outra pessoa pode ter um impacto indireto na saúde mental da usuária, aumentando o risco de ansiedade, depressão ou outros problemas de saúde mental, especialmente se a situação for prolongada ou se tornar mais grave."
+        }
+      ],
+      "justification": "O score preliminar de risco foi ajustado para 50, considerando a gravidade e a frequência dos fatores de risco identificados. A preocupação com o comportamento de outra pessoa, o ambiente de estresse ou tensão e o impacto indireto na saúde mental são fatores significativos que justificam um aumento no score de risco. Além disso, o contexto de violência doméstica foi considerado, o que pode aumentar a vulnerabilidade da usuária a problemas de saúde mental. Recomenda-se um monitoramento contínuo da situação, apoio emocional e, se necessário, intervenção profissional para mitigar os riscos identificados. É fundamental abordar a situação com sensibilidade e considerar uma abordagem holística para o bem-estar da usuária, incluindo apoio psicológico, orientação sobre estratégias de coping e, se aplicável, encaminhamento para serviços de apoio especializados em violência doméstica."
+    }
+  ]
+}
 ```
-
-#### Próximos Passos
-
-1. **Implementação de Cache**: Reduzir custos e latência para análises similares
-2. **Sistema de Feedback**: Coletar avaliações sobre qualidade das análises
-3. **Dashboard Analytics**: Visualização de métricas e tendências
-4. **Testes A/B**: Comparação de diferentes configurações de prompts
-5. **Fine-tuning**: Treinar modelos especializados no domínio específico
-
----
 
 ## 9. Referências
 
