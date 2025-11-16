@@ -8,12 +8,14 @@ from contextlib import asynccontextmanager
 import time
 from typing import Dict
 
+import json
 from models.schemas import AnalysisRequest, FinalAnalysis
 from utils.data_loader import DataLoader
 from utils.logger import Logger
 from agents.specialist_analysis import run_specialist_analysis
 from agents.review_loop import run_review_loop
 from agents.synthesizer import run_synthesis
+from aurora.agent import create_aurora_agent
 
 
 # Global instances
@@ -304,6 +306,24 @@ async def analyze_responses(request: AnalysisRequest):
         print(f"⚠️  Nível de Risco: {final_analysis.risk_level}")
         print(f"🔍 Fatores Identificados: {len(final_analysis.consolidated_factors)}")
         
+        # Phase 4: Aurora Active Listening
+        print(f"\n{'='*60}")
+        print("🎧 FASE 4: ESCUTA ATIVA COM AURORA")
+        print(f"{'='*60}\n")
+
+        aurora_agent = create_aurora_agent()
+        aurora_task = f"Recomendações fornecidas à usuária: {json.dumps(final_analysis.recommendations)}"
+        aurora_response_str = await aurora_agent.run(aurora_task, json_mode=True)
+
+        try:
+            aurora_response = json.loads(aurora_response_str)
+            aurora_message = aurora_response.get("message", "Não foi possível obter a mensagem de Aurora.")
+            final_analysis.aurora_message = aurora_message
+            print(f"💬 Mensagem da Aurora: {aurora_message}")
+        except json.JSONDecodeError:
+            print("⚠️  Não foi possível decodificar a resposta de Aurora.")
+            final_analysis.aurora_message = "Erro ao processar a mensagem de apoio."
+
         # Finalize log
         duration = time.time() - start_time
         logger.finalize_log(
