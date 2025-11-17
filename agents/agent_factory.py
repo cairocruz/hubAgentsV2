@@ -3,7 +3,7 @@ Agent factory for creating agents using Microsoft Agent Framework.
 Maintains same public interface as original AutoGen implementation.
 """
 import json
-from typing import Optional
+from typing import Optional, List, Dict, Union
 from config.llm_config import get_chat_client, get_model_name, get_model_config, get_provider_name
 from prompts.system_prompts import (
     get_specialist_prompt,
@@ -27,31 +27,40 @@ class AgentWrapper:
         self.config = get_model_config()
         self.provider = get_provider_name()
     
-    async def run(self, task: str, json_mode: bool = True) -> str:
+    async def run(self, task: Union[str, List[Dict]], json_mode: bool = True) -> str:
         """
         Execute agent task and return response.
         
         Args:
-            task: Task description/prompt for the agent
+            task: Task description/prompt for the agent, or a list of messages for conversational context.
             json_mode: Whether to enforce JSON response format
             
         Returns:
             str: Agent's response (JSON string if json_mode=True)
         """
-        messages = [
-            {"role": "system", "content": self.instructions},
-            {"role": "user", "content": task}
-        ]
+        if isinstance(task, str):
+            messages = [
+                {"role": "system", "content": self.instructions},
+                {"role": "user", "content": task}
+            ]
+        else:
+            messages = task
         
         try:
             # Handle different provider APIs
             if self.provider == "azure_openai":
                 # Agent Framework with Azure OpenAI
-                agent = self.client.create_agent(
-                    name=self.name,
-                    instructions=self.instructions,
-                )
-                response = await agent.run(task)
+                from agent_framework import ChatAgent
+                agent = ChatAgent(name=self.name, client=self.client, instructions=self.instructions)
+
+                if isinstance(task, str):
+                    response = await agent.run(task)
+                else:
+                    thread = await agent.get_new_thread()
+                    for message in messages:
+                        await thread.add_message(message)
+                    response = await agent.run(thread)
+
                 return str(response)
             
             else:

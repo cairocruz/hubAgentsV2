@@ -84,7 +84,6 @@ class FinalAnalysis(BaseModel):
     synthesis: str = Field(..., description="Holistic analysis synthesizing all reports")
     recommendations: List[str] = Field(default_factory=list, description="Recommended actions")
     specialist_reports: List[SpecialistReport] = Field(..., description="All approved specialist reports")
-    aurora_message: Optional[str] = Field(None, description="A message from the Aurora agent for active listening")
 
 
 class LogEvent(BaseModel):
