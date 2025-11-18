@@ -351,11 +351,15 @@ async def start_aurora_session(request: AuroraSessionStartRequest):
     """
     session_id = str(uuid.uuid4())
 
-    # Create the initial context for Aurora
+    # Create the initial context for Aurora with rich information
+    recommendations = request.get_recommendations()
+    context_summary = request.get_context_summary()
+    
     context = (
         "Você é a Aurora, uma agente de escuta ativa. "
-        "A usuária acaba de receber estas recomendações. Inicie a conversa de forma acolhedora. "
-        f"Recomendações: {json.dumps(request.recommendations)}"
+        "A usuária acaba de receber uma análise de risco e recomendações. Inicie a conversa de forma acolhedora. "
+        f"Contexto da análise: {context_summary} "
+        f"Recomendações específicas: {json.dumps(recommendations)}"
     )
 
     aurora_agent = create_aurora_agent()

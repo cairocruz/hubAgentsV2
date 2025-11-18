@@ -44,14 +44,24 @@ class AgentWrapper:
                 {"role": "user", "content": task}
             ]
         else:
-            messages = task
+            # task is a list of messages (conversation history)
+            messages = task.copy()  # Copy to avoid modifying original
+            
+            # Ensure system instructions are present in the conversation
+            # If the first message isn't a system message, prepend our instructions
+            if not messages or messages[0]["role"] != "system":
+                messages.insert(0, {"role": "system", "content": self.instructions})
+            # If there's already a system message, ensure it contains our instructions
+            elif self.instructions not in messages[0]["content"]:
+                # Merge instructions with existing system message
+                messages[0]["content"] = self.instructions + "\n\n" + messages[0]["content"]
         
         try:
             # Handle different provider APIs
             if self.provider == "azure_openai":
                 # Agent Framework with Azure OpenAI
                 from agent_framework import ChatAgent
-                agent = ChatAgent(name=self.name, client=self.client, instructions=self.instructions)
+                agent = ChatAgent(chat_client=self.client, name=self.name, instructions=self.instructions)
 
                 if isinstance(task, str):
                     response = await agent.run(task)
