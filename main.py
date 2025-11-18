@@ -8,9 +8,18 @@ from contextlib import asynccontextmanager
 import time
 from typing import Dict
 
+import json
+import uuid
 from models.schemas import AnalysisRequest, FinalAnalysis
 from utils.data_loader import DataLoader
 from utils.logger import Logger
+from aurora.agent import create_aurora_agent
+from aurora.schemas import (
+    AuroraSessionStartRequest,
+    AuroraSessionStartResponse,
+    AuroraChatRequest,
+    AuroraChatResponse,
+)
 from agents.specialist_analysis import run_specialist_analysis
 from agents.review_loop import run_review_loop
 from agents.synthesizer import run_synthesis
@@ -327,6 +336,81 @@ async def analyze_responses(request: AnalysisRequest):
         
         print(f"\n❌ ERRO: {str(e)}\n")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Aurora-specific session management
+aurora_sessions: Dict[str, Dict] = {}
+
+
+@app.post("/aurora/start_session", response_model=AuroraSessionStartResponse, tags=["Aurora Conversational Agent"])
+async def start_aurora_session(request: AuroraSessionStartRequest):
+    """
+    ## 🚀 Start a new conversational session with Aurora
+
+    Initializes a new session with context and returns Aurora's first message.
+    """
+    session_id = str(uuid.uuid4())
+
+    # Create the initial context for Aurora with rich information
+    recommendations = request.get_recommendations()
+    context_summary = request.get_context_summary()
+    
+    context = (
+        "Você é a Aurora, uma agente de escuta ativa. "
+        "A usuária acaba de receber uma análise de risco e recomendações. Inicie a conversa de forma acolhedora. "
+        f"Contexto da análise: {context_summary} "
+        f"Recomendações específicas: {json.dumps(recommendations)}"
+    )
+
+    aurora_agent = create_aurora_agent()
+    initial_response_str = await aurora_agent.run(context, json_mode=True)
+
+    try:
+        initial_response = json.loads(initial_response_str)
+        initial_message = initial_response.get("message", "Olá, estou aqui para te ouvir. Como você está?")
+    except json.JSONDecodeError:
+        initial_message = "Olá, estou aqui para te ouvir. Como você está se sentindo?"
+
+    # Store the session history
+    aurora_sessions[session_id] = {
+        "history": [
+            {"role": "system", "content": context},
+            {"role": "assistant", "content": initial_message}
+        ]
+    }
+
+    return AuroraSessionStartResponse(session_id=session_id, initial_message=initial_message)
+
+
+@app.post("/aurora/chat", response_model=AuroraChatResponse, tags=["Aurora Conversational Agent"])
+async def chat_with_aurora(request: AuroraChatRequest):
+    """
+    ## 💬 Continue a conversation with Aurora
+
+    Sends a user message to an existing session and gets a contextual response.
+    """
+    session = aurora_sessions.get(request.session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Append user message to history
+    session["history"].append({"role": "user", "content": request.message})
+
+    # Create a task from the history
+    # The agent wrapper will receive the full history in the `run` method
+    aurora_agent = create_aurora_agent()
+    aurora_response_str = await aurora_agent.run(session["history"], json_mode=True)
+
+    try:
+        aurora_response = json.loads(aurora_response_str)
+        response_message = aurora_response.get("message", "Sinto muito, não consegui processar sua mensagem.")
+    except json.JSONDecodeError:
+        response_message = "Desculpe, tive um problema para entender. Pode repetir?"
+
+    # Append assistant response to history
+    session["history"].append({"role": "assistant", "content": response_message})
+
+    return AuroraChatResponse(session_id=request.session_id, response=response_message)
 
 
 if __name__ == "__main__":

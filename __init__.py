@@ -17,11 +17,11 @@ from agents import (
     create_specialist_agent,
     create_supervisor_agent,
     create_synthesizer_agent,
-    run_specialist_analysis_sync,
+    run_specialist_analysis,
     run_synthesis
 )
 from utils import DataLoader, Logger
-from config import get_llm_config
+from config.llm_config import get_model_config
 
 __all__ = [
     '__version__',
@@ -30,7 +30,7 @@ __all__ = [
     'create_specialist_agent',
     'create_supervisor_agent',
     'create_synthesizer_agent',
-    'run_specialist_analysis_sync',
+    'run_specialist_analysis',
     'run_synthesis',
     'DataLoader',
     'Logger',
