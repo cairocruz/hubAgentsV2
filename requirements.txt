@@ -14,3 +14,4 @@ numpy>=1.26.0
 # Utilities
 python-multipart>=0.0.6
 aiofiles>=24.1.0  # Requerido pelo agent-framework
+googlemaps
