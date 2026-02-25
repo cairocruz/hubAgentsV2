@@ -198,7 +198,7 @@ with tab_agents:
                 "total_duration_ms": "Duração (ms)",
                 "wall_time_seconds": "Tempo Real (s)",
             }),
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 
@@ -295,7 +295,7 @@ with tab_timeline:
                 "duration_ms": "ms",
                 "created_at": "Timestamp",
             }),
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
             height=600,
         )
@@ -312,7 +312,7 @@ with tab_raw:
     if df_raw.empty:
         st.info("Sem dados brutos para esta análise.")
     else:
-        st.dataframe(df_raw, use_container_width=True, hide_index=True, height=600)
+        st.dataframe(df_raw, width="stretch", hide_index=True, height=600)
 
         # Download CSV
         csv_data = df_raw.to_csv(index=False).encode("utf-8")

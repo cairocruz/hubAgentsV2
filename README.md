@@ -247,6 +247,7 @@ stateDiagram-v2
 hubAgentsV2/
 │
 ├── main.py                          # Servidor FastAPI — endpoints e lifespan
+├── streamlit_app.py                 # Dashboard Streamlit de tracing e observabilidade
 ├── requirements.txt                 # Dependências Python (pip)
 ├── start_server.bat                 # Script para iniciar o servidor no Windows
 ├── .env                             # Variáveis de ambiente (não versionado)
@@ -315,6 +316,7 @@ hubAgentsV2/
 | **Supabase** | ≥ 2.4 | Banco de dados PostgreSQL gerenciado (RAG + logs) |
 | **pgvector** | (extensão PostgreSQL) | Busca por similaridade de embeddings |
 | **SentenceTransformer** | ≥ 2.5 | Modelo `paraphrase-multilingual-MiniLM-L12-v2` (384 dims) |
+| **Streamlit** | ≥ 1.30 | Dashboard interativo de tracing e observabilidade |
 | **NumPy** | (transitividade) | Operações vetoriais no fallback local de RAG |
 
 ### Provedores LLM Suportados
@@ -647,6 +649,27 @@ ORDER BY step_number;
 SELECT * FROM vw_trace_agent_summary
 WHERE analysis_id = 'seu-uuid-aqui';
 ```
+
+### 8.4 Dashboard Streamlit
+
+O arquivo `streamlit_app.py` oferece uma interface visual para explorar os dados de tracing. Ele consulta diretamente as views do Supabase.
+
+**Executar:**
+
+```bash
+python -m streamlit run streamlit_app.py
+```
+
+Acesse em **http://localhost:8501**.
+
+**Abas disponíveis:**
+
+| Aba | Conteúdo |
+|---|---|
+| **Visão Geral** | Métricas agregadas (agentes, eventos, steps, tool calls, tempo total), fases executadas, gráficos por fase e tipo |
+| **Por Agente** | Tabela resumo por agente, gráficos de steps e tempo, detalhamento individual de cada evento (pensamento, tool, input/output) |
+| **Timeline** | Timeline completa com filtros por fase e tipo de evento |
+| **Dados Brutos** | Registros completos da tabela `agent_trace_events` + download CSV |
 
 ---
 
