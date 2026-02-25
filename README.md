@@ -2,10 +2,11 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Microsoft Agent Framework](https://img.shields.io/badge/Agent_Framework-1.0.0b-FF6F00?style=flat-square)](https://microsoft.github.io/agent-framework/)
+[![CrewAI](https://img.shields.io/badge/CrewAI-0.28.8-FF6F00?style=flat-square)](https://crewai.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-> **Trabalho de Conclusão de Curso** - Sistema inteligente de análise de risco baseado em arquitetura multi-agente, utilizando Large Language Models (LLMs) para processamento e síntese de informações contextuais complexas.
+> **Trabalho de Conclusão de Curso** - Sistema inteligente de análise de risco baseado em arquitetura multi-agente, utilizando Large Language Models (LLMs) para processamento e síntese de informações contextuais complexas via CrewAI e Busca RAG no Supabase.
 
 ---
 
@@ -25,7 +26,7 @@
 
 ## 1. Resumo do Projeto
 
-Este trabalho apresenta o desenvolvimento de um sistema de análise de risco baseado em arquitetura multi-agente, implementado utilizando o Microsoft Agent Framework. O sistema foi projetado para processar e analisar informações contextuais fornecidas por usuários, gerando avaliações de risco estruturadas e fundamentadas através da colaboração de múltiplos agentes especializados.
+Este trabalho apresenta o desenvolvimento de um sistema de análise de risco baseado em arquitetura multi-agente, implementado utilizando o **CrewAI** e **Supabase**. O sistema foi projetado para processar e analisar informações contextuais fornecidas por usuários, gerando avaliações de risco estruturadas e fundamentadas através da colaboração de múltiplos agentes especializados embasados em casos históricos (RAG).
 
 ### 1.1 Objetivos
 
@@ -33,10 +34,10 @@ Este trabalho apresenta o desenvolvimento de um sistema de análise de risco bas
 Desenvolver um sistema computacional capaz de realizar análises de risco complexas através da coordenação de múltiplos agentes de inteligência artificial especializados.
 
 **Objetivos Específicos:**
-- Implementar uma arquitetura multi-agente escalável utilizando Large Language Models
-- Desenvolver mecanismos de revisão e controle de qualidade automatizados
-- Criar um pipeline de síntese que consolide análises paralelas em avaliações unificadas
-- Validar a eficácia do sistema através de casos de teste representativos
+- Implementar uma arquitetura multi-agente escalável utilizando **CrewAI**.
+- Suportar Retrieval-Augmented Generation (RAG) consultando **Supabase (pgvector)** para ancorar a análise de risco em casos históricos.
+- Desenvolver mecanismos de revisão e controle de qualidade automatizados.
+- Criar um pipeline de síntese que consolide análises paralelas em avaliações unificadas guardadas em banco de dados gerencial.
 
 ### 1.2 Justificativa
 
@@ -54,9 +55,9 @@ Sistemas multi-agente (MAS - Multi-Agent Systems) representam um paradigma compu
 
 O sistema utiliza LLMs como base cognitiva dos agentes. Modelos como GPT-4 da OpenAI e Llama 3 demonstram capacidades avançadas de compreensão contextual e raciocínio, sendo ideais para tarefas de análise qualitativa complexa.
 
-### 2.3 Microsoft Agent Framework
+### 2.3 CrewAI & Supabase RAG
 
-O Microsoft Agent Framework fornece uma camada de abstração para criação e orquestração de agentes de IA, simplificando a implementação de sistemas multi-agente e oferecendo suporte nativo para múltiplos provedores de LLM.
+O sistema utiliza **CrewAI** para orquestrar *Agents* de forma nativa e alocá-los a *Tasks* especializadas. Para melhorar a precisão, os agentes contam com *Tools* que realizam RAG (Retrieval-Augmented Generation) armazenado no **Supabase**, substituindo aprendizado fixo (Few-Shot Prompting) por casos reais similares.
 
 ### 2.4 Arquitetura de Especialização
 
@@ -90,9 +91,9 @@ flowchart TB
         D[Tratamento de Respostas]
     end
     
-    subgraph ORCHESTRATION["Camada de Orquestração"]
-        E[Controlador Principal]
-        F[Gerenciador de Fluxo]
+    subgraph CREWAI["Camada de Orquestração - CrewAI"]
+        E[Crew Sequencial]
+        F[Tasks]
     end
     
     subgraph AGENTS["Camada de Agentes"]
@@ -102,15 +103,15 @@ flowchart TB
         I[Agente Sintetizador]
     end
     
-    subgraph LLM["Provedores LLM"]
+    subgraph LLM["Provedores LLM via LiteLLM"]
         J[Azure OpenAI]
         K[OpenAI]
         L[Groq]
     end
     
-    subgraph STORAGE["Camada de Dados"]
-        M[(Few-Shot Examples)]
-        N[(Logs JSON)]
+    subgraph SUPABASE["Supabase Database"]
+        M[(Vector DB - RAG Tool)]
+        N[(Agent Logs Table)]
     end
     
     A -->|HTTP POST| B
@@ -127,8 +128,8 @@ flowchart TB
     H -.->|API Calls| J & K & L
     I -.->|API Calls| J & K & L
     
-    G -.->|Carrega| M
-    E -.->|Registra| N
+    G -.->|Consulta RAG| M
+    E -.->|Gera| N
     
     classDef clientStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef apiStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px

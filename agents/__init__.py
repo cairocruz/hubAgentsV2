@@ -1,18 +1,11 @@
-"""Initialize agents package."""
-from .agent_factory import (
-    create_specialist_agent,
-    create_supervisor_agent,
-    create_synthesizer_agent
-)
-from .specialist_analysis import run_specialist_analysis
-from .review_loop import run_review_loop
-from .synthesizer import run_synthesis
+"""
+agents/ — Pacote de orquestração multiagente.
+
+Exporta a classe principal RiskAnalysisCrew, que coordena os 7 agentes
+(5 especialistas + 1 supervisor + 1 sintetizador) nas 3 fases de análise.
+"""
+from .risk_analysis_crew import RiskAnalysisCrew
 
 __all__ = [
-    'create_specialist_agent',
-    'create_supervisor_agent',
-    'create_synthesizer_agent',
-    'run_specialist_analysis',
-    'run_review_loop',
-    'run_synthesis'
+    'RiskAnalysisCrew'
 ]

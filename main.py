@@ -1,75 +1,101 @@
 """
-Main FastAPI application for Multi-Agent Risk Analysis System.
-Uses Microsoft Agent Framework.
+main.py — Ponto de entrada da aplicação FastAPI.
+
+Este arquivo define o servidor HTTP que expõe a API REST do Sistema de Análise
+de Risco com IA Multiagente. Ele cria a aplicação FastAPI, configura o CORS,
+registra os endpoints e, ao ser executado diretamente, inicia o servidor
+Uvicorn na porta 8000.
+
+Endpoints disponíveis:
+  GET  /         → Informações gerais da API
+  GET  /health   → Health check (status do sistema e do Supabase)
+  POST /analyze  → Recebe 5 respostas da usuária e devolve a análise de risco
+  GET  /docs     → Documentação interativa Swagger UI
+  GET  /redoc    → Documentação alternativa ReDoc
 """
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import time
-from typing import Dict
 
-from models.schemas import AnalysisRequest, FinalAnalysis
-from utils.data_loader import DataLoader
-from utils.logger import Logger
-from agents.specialist_analysis import run_specialist_analysis
-from agents.review_loop import run_review_loop
-from agents.synthesizer import run_synthesis
+# ---------------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------------
+from fastapi import FastAPI, HTTPException       # Framework web assíncrono
+from fastapi.middleware.cors import CORSMiddleware  # Middleware de Cross-Origin
+from contextlib import asynccontextmanager       # Gerenciador de ciclo de vida
+import time                                      # Para medir duração da análise
+from typing import Dict, List, Any               # Type hints
 
+from models.schemas import AnalysisRequest       # Schema Pydantic da requisição
+from utils.supabase_client import SupabaseDB     # Wrapper do banco Supabase
+from agents.risk_analysis_crew import RiskAnalysisCrew  # Orquestrador multiagente
 
-# Global instances
-data_loader = None
-logger = None
+# ---------------------------------------------------------------------------
+# Variável global do banco de dados
+# ---------------------------------------------------------------------------
+# Instância global do SupabaseDB, inicializada no lifespan (startup).
+# Fica disponível para qualquer endpoint registrar logs de erro etc.
+db = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize resources on startup."""
-    global data_loader, logger
-    
-    # Initialize data loader
-    data_loader = DataLoader(data_dir="data")
-    print("✅ DataLoader initialized")
-    
-    # Initialize logger
-    logger = Logger(log_dir="logs")
-    print("✅ Logger initialized")
-    
-    yield
-    
-    # Cleanup (if needed)
+    """
+    Gerenciador de ciclo de vida do FastAPI (substitui on_event("startup")).
+
+    No startup:
+      - Cria a instância global do SupabaseDB e verifica se a conexão
+        com o Supabase está funcional (variáveis SUPABASE_URL e SUPABASE_KEY
+        definidas no .env).
+
+    No shutdown:
+      - Apenas exibe uma mensagem informativa de encerramento.
+    """
+    global db
+
+    # ---- Startup ----
+    db = SupabaseDB()
+    if db.client:
+        print("✅ DB Supabase inicializado")
+    else:
+        print("⚠️ Supabase NÃO Mapeado! Verifique o .env")
+
+    yield  # A aplicação roda enquanto o yield está ativo
+
+    # ---- Shutdown ----
     print("🔄 Shutting down...")
 
-
-# Create FastAPI app with complete metadata
+# ---------------------------------------------------------------------------
+# Criação da aplicação FastAPI
+# ---------------------------------------------------------------------------
+# O objeto `app` é a aplicação principal. Todos os metadados abaixo aparecem
+# automaticamente na documentação Swagger (/docs) e ReDoc (/redoc).
 app = FastAPI(
     title="Sistema de Análise de Risco com IA Multiagente",
     description="""
     ## 🤖 Sistema Avançado de Análise de Risco
     
-    Sistema multiagente para análise de risco de violência doméstica usando **Microsoft Agent Framework**.
+    Sistema multiagente para análise de risco de violência doméstica usando **CrewAI**.
     
     ### ✨ Recursos Principais:
     
     - **5 Agentes Especialistas:** Analisam diferentes dimensões do risco
-        - 🧠 Especialista Emocional
-        - 👤 Especialista Comportamental  
-        - ⚠️ Especialista em Agressão
-        - ⚖️ Especialista Legal
-        - 🏠 Especialista Ambiental
+        - 🧠 Rotina, Sobrecarga e Divisão de Tarefas Domésticas
+        - 👤 Tom Emocional, Comunicação e Intimidação
+        - ⚠️ Redes de Apoio, Isolamento Social e Vínculos
+        - ⚖️ Controle Financeiro e Dependência Econômica
+        - 🏠 Bem-estar Físico, Psicológico e Saúde Mental
     
     - **Supervisor de Qualidade:** Revisa e aprova todas as análises
     - **Sintetizador:** Consolida todas as avaliações em um relatório final
     
     ### 🔄 Fluxo de Análise:
     
-    1. **Fase 1:** Análise paralela por 5 especialistas
-    2. **Fase 2:** Revisão e aprovação pelo supervisor
+    1. **Fase 1:** Análise por 5 especialistas
+    2. **Fase 2:** Revisão e aprovação pelo supervisor (com loop de retrabalho)
     3. **Fase 3:** Síntese final com score unificado
     
     ### 🎯 Modelos Suportados:
     
-    - Azure OpenAI (GPT-4, GPT-4o-mini)
-    - OpenAI (GPT-4, GPT-3.5-turbo)
+    - Gemini (gemini-1.5-flash — padrão)
+    - OpenAI (GPT-4, GPT-4o-mini)
     - Groq (Llama3, Mixtral)
     
     ### 📊 Formato de Saída:
@@ -88,38 +114,42 @@ app = FastAPI(
         "name": "MIT License",
         "url": "https://opensource.org/licenses/MIT",
     },
-    lifespan=lifespan,
-    docs_url="/docs",  # Swagger UI
-    redoc_url="/redoc",  # ReDoc
-    openapi_url="/openapi.json",  # OpenAPI schema
+    lifespan=lifespan,       # Função de ciclo de vida (startup/shutdown)
+    docs_url="/docs",        # Swagger UI
+    redoc_url="/redoc",      # ReDoc
+    openapi_url="/openapi.json",  # Schema OpenAPI em JSON
 )
 
-# Add CORS middleware
+# ---------------------------------------------------------------------------
+# Middleware CORS
+# ---------------------------------------------------------------------------
+# Permite que qualquer origem (front-end) faça requisições à API.
+# Em produção, substitua allow_origins=["*"] pelos domínios reais.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],       # Origens permitidas (todas, por enquanto)
+    allow_credentials=True,    # Permite envio de cookies/credenciais
+    allow_methods=["*"],       # Métodos HTTP permitidos (GET, POST, etc.)
+    allow_headers=["*"],       # Headers permitidos
 )
 
 
+# ---------------------------------------------------------------------------
+# Endpoint: GET /
+# ---------------------------------------------------------------------------
 @app.get("/", tags=["Sistema"])
 async def root():
     """
-    ## 🏠 Endpoint Raiz
-    
-    Retorna informações básicas sobre a API e endpoints disponíveis.
-    
-    ### Resposta:
-    - Mensagem de boas-vindas
-    - Versão da API
-    - Lista de endpoints disponíveis
+    Endpoint raiz — retorna informações básicas sobre a API.
+
+    Útil para:
+      - Verificar se o servidor está online.
+      - Obter a lista de endpoints disponíveis.
     """
     return {
         "message": "Sistema de Análise de Risco com IA Multiagente",
         "version": "2.0.0",
-        "framework": "Microsoft Agent Framework",
+        "framework": "CrewAI",
         "endpoints": {
             "GET /": "Informações da API",
             "GET /health": "Verifica status do sistema",
@@ -131,217 +161,118 @@ async def root():
     }
 
 
+# ---------------------------------------------------------------------------
+# Endpoint: GET /health
+# ---------------------------------------------------------------------------
 @app.get("/health", tags=["Sistema"])
 async def health_check():
     """
-    ## 💚 Health Check
-    
-    Verifica o estado de saúde do sistema e componentes.
-    
-    ### Verificações:
-    - Status do servidor
-    - DataLoader (dados few-shot)
-    - Logger (sistema de logs)
-    
-    ### Resposta:
-    ```json
-    {
-        "status": "healthy",
-        "data_loader": "initialized",
-        "logger": "initialized"
-    }
-    ```
+    Health check — verifica se o servidor e o Supabase estão operacionais.
+
+    Retorna:
+      - status geral do servidor ("healthy")
+      - estado da conexão com o Supabase ("connected" / "disconnected")
+      - contagem de agentes configurados (5 especialistas + 1 supervisor + 1 sintetizador)
     """
     return {
         "status": "healthy",
-        "data_loader": "initialized" if data_loader else "not initialized",
-        "logger": "initialized" if logger else "not initialized",
-        "framework": "Microsoft Agent Framework",
+        "supabase": "connected" if db and db.client else "disconnected",
+        "framework": "CrewAI",
         "agents": {
-            "specialists": 5,
-            "supervisor": 1,
-            "synthesizer": 1
+            "specialists": 5,    # Agentes que analisam cada dimensão de risco
+            "supervisor": 1,     # Agente que revisa as análises
+            "synthesizer": 1     # Agente que consolida o relatório final
         }
     }
 
 
+# ---------------------------------------------------------------------------
+# Endpoint: POST /analyze
+# ---------------------------------------------------------------------------
 @app.post("/analyze", response_model=Dict, tags=["Análise de Risco"])
 async def analyze_responses(request: AnalysisRequest):
     """
-    ## 🎯 Análise Completa de Risco
-    
-    Executa análise multiagente completa sobre as respostas fornecidas.
-    
-    ### 📋 Processo de Análise (3 Fases):
-    
-    #### Fase 1: Análise Paralela (5 Especialistas)
-    Cada especialista analisa as respostas de forma independente:
-    - **Especialista Emocional:** Avalia estado emocional e dependência
-    - **Especialista Comportamental:** Analisa padrões comportamentais
-    - **Especialista em Agressão:** Identifica sinais de violência
-    - **Especialista Legal:** Avalia histórico legal e medidas protetivas
-    - **Especialista Ambiental:** Analisa contexto social e suporte
-    
-    #### Fase 2: Revisão pelo Supervisor
-    - Supervisor revisa cada análise individual
-    - Pode solicitar retrabalho se análise não for satisfatória
-    - Máximo de 1 tentativa de retrabalho por especialista
-    
-    #### Fase 3: Síntese Final
-    - Consolida todas as análises aprovadas
-    - Calcula score unificado (0-100)
-    - Define nível de risco (BAIXO/MODERADO/ALTO/CRÍTICO)
-    - Gera recomendações de ação
-    
-    ### 📥 Entrada Esperada:
-    ```json
-    {
-        "responses": [
-            {"question": "Pergunta 1", "answer": "Resposta da usuária"},
-            {"question": "Pergunta 2", "answer": "Resposta da usuária"},
-            {"question": "Pergunta 3", "answer": "Resposta da usuária"},
-            {"question": "Pergunta 4", "answer": "Resposta da usuária"},
-            {"question": "Pergunta 5", "answer": "Resposta da usuária"}
-        ]
-    }
-    ```
-    
-    ### 📤 Saída:
-    ```json
-    {
-        "risk_score": 75.5,
-        "risk_level": "ALTO",
-        "specialist_analyses": [...],
-        "consolidated_factors": {...},
-        "recommendations": [...]
-    }
-    ```
-    
-    ### ⚠️ Observações:
-    - Tempo médio: 30-60 segundos
-    - Requer API key válida (Groq/OpenAI/Azure)
-    - Todas as respostas são processadas em paralelo
-    
-    ### 🔒 Privacidade:
-    - Dados não são armazenados permanentemente
-    - Logs são salvos apenas para auditoria
+    Rota principal de análise de risco de violência doméstica.
+
+    Recebe exatamente 5 respostas textuais da usuária (uma por dimensão)
+    e orquestra o fluxo multiagente em 3 fases:
+
+      Fase 1 — 5 especialistas analisam cada resposta usando RAG (busca de
+               casos similares no Supabase via pgvector).
+      Fase 2 — Um Supervisor revisa as análises; se reprovar alguma, o
+               especialista correspondente refaz (loop de até 2 iterações).
+      Fase 3 — Um Sintetizador consolida tudo em um relatório final com
+               score de risco (0-100), nível (BAIXO/MODERADO/ALTO/CRÍTICO),
+               fatores de risco e recomendações.
+
+    Args:
+        request: AnalysisRequest com campo `responses` (lista de 5 strings).
+
+    Returns:
+        Dict com risk_score, risk_level, consolidated_factors, recommendations
+        e metadados (_meta com duração e analysis_id).
+
+    Raises:
+        HTTPException 500 se ocorrer qualquer erro durante a análise.
     """
-    start_time = time.time()
-    
+    start_time = time.time()  # Marca o início para calcular a duração
+
     try:
-        # Start logging
-        request_id = logger.start_request_log(request.model_dump())
-        logger.log_event(
-            event_type="request_received",
-            data={"num_responses": len(request.responses)}
-        )
-        
-        # Phase 1: Parallel Specialist Analysis
         print(f"\n{'='*60}")
-        print("🔬 FASE 1: ANÁLISE PARALELA DOS ESPECIALISTAS")
+        print("🤖 INICIANDO ANÁLISE MULTI-AGENTE (CrewAI – 3 Fases)")
         print(f"{'='*60}\n")
-        
-        specialist_reports = await run_specialist_analysis(
-            request.responses,
-            data_loader
-        )
-        
-        for idx, report in enumerate(specialist_reports, 1):
-            logger.log_event(
-                event_type="specialist_analysis",
-                agent_id=report.agent_id,
-                attempt=1,
-                data=report.model_dump()
-            )
-            print(f"✅ Agente {idx} ({report.domain}): Score {report.preliminary_score:.1f}")
-        
-        # Phase 2: Review Loop with Supervisor
-        print(f"\n{'='*60}")
-        print("👨‍💼 FASE 2: LOOP DE REVISÃO COM SUPERVISOR")
-        print(f"{'='*60}\n")
-        
-        approved_reports = []
-        
-        for idx, report in enumerate(specialist_reports):
-            print(f"Revisando Agente {report.agent_id}...")
-            
-            final_report, feedback_history = await run_review_loop(
-                report=report,
-                data_loader=data_loader,
-                user_response=request.responses[idx],
-                max_rework=1
-            )
-            
-            # Log feedback
-            for attempt_num, feedback in enumerate(feedback_history, 1):
-                logger.log_event(
-                    event_type="reviewer_feedback",
-                    agent_id=feedback.agent_id,
-                    attempt=attempt_num,
-                    data=feedback.model_dump()
-                )
-                
-                if feedback.status == "APROVADO":
-                    print(f"  ✅ APROVADO (Tentativa {attempt_num})")
-                else:
-                    print(f"  🔄 REVISAR (Tentativa {attempt_num})")
-            
-            approved_reports.append(final_report)
-        
-        # Phase 3: Final Synthesis
-        print(f"\n{'='*60}")
-        print("🎯 FASE 3: SÍNTESE FINAL")
-        print(f"{'='*60}\n")
-        
-        final_analysis = await run_synthesis(approved_reports)
-        
-        logger.log_event(
-            event_type="final_synthesis",
-            data=final_analysis.model_dump()
-        )
-        
-        print(f"📊 Score Final: {final_analysis.final_score:.1f}")
-        print(f"⚠️  Nível de Risco: {final_analysis.risk_level}")
-        print(f"🔍 Fatores Identificados: {len(final_analysis.consolidated_factors)}")
-        
-        # Finalize log
+
+        # Extrai a lista de respostas do body da requisição
+        responses_list: List[str] = request.model_dump()["responses"]
+
+        # Cria o orquestrador e dispara o fluxo completo (Fase 1 → 2 → 3)
+        crew = RiskAnalysisCrew(responses=responses_list)
+        final_assessment = crew.kickoff()
+
+        # Adiciona metadados de desempenho ao resultado
         duration = time.time() - start_time
-        logger.finalize_log(
-            response=final_analysis.model_dump(),
-            duration=duration
-        )
-        
-        print(f"\n⏱️  Tempo total: {duration:.2f}s")
-        print(f"📝 Log salvo: {request_id}\n")
-        
-        return final_analysis.model_dump()
-        
+        final_assessment["_meta"] = {
+            "duration_seconds": round(duration, 2),   # Tempo total da análise
+            "max_rework_iterations": 2,               # Limite de retrabalho configurado
+        }
+
+        print(f"\n⏱️  Tempo total: {duration:.2f}s\n")
+        return final_assessment
+
     except Exception as e:
-        # Log error
-        if logger.current_log:
-            logger.log_event(
-                event_type="error",
-                data={"error": str(e), "type": type(e).__name__}
-            )
-            logger.finalize_log()
-        
+        # Em caso de erro, loga no Supabase (se disponível) e retorna 500
         print(f"\n❌ ERRO: {str(e)}\n")
+
+        if db:
+            db.log_analysis(
+                agent_role="Sistema",
+                quest="Erro Fatal",
+                user_response="N/A",
+                analysis_result=str(e),
+                metadata={"type": "error"},
+            )
+
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
+# Execução direta: inicia o servidor Uvicorn
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
-    
+
     print("""
     ╔═══════════════════════════════════════════════════════════════╗
     ║   Sistema de Análise de Risco com IA Multiagente            ║
     ║   Iniciando servidor...                                       ║
     ╚═══════════════════════════════════════════════════════════════╝
     """)
-    
+
+    # Inicia o servidor HTTP na porta 8000, acessível de qualquer interface.
+    # log_level="info" exibe as requisições recebidas no console.
     uvicorn.run(
         app,
-        host="0.0.0.0",
-        port=8000,
-        log_level="info"
+        host="0.0.0.0",      # Escuta em todas as interfaces de rede
+        port=8000,            # Porta HTTP
+        log_level="info"      # Nível de log do Uvicorn
     )

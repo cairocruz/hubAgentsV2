@@ -5,7 +5,7 @@ echo ╚════════════════════════
 echo.
 
 echo Ativando ambiente virtual...
-call venv\Scripts\activate.bat
+call .venv\Scripts\activate.bat
 
 echo.
 echo Verificando configuração...

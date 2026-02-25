@@ -1,5 +1,14 @@
 """
-Pydantic models for data validation and serialization.
+models/schemas.py — Modelos Pydantic para validação e serialização de dados.
+
+Define os schemas (contratos) utilizados pela API FastAPI:
+
+  - AnalysisRequest  : corpo da requisição POST /analyze (5 respostas da usuária)
+  - RiskFactor       : fator de risco individual identificado por um agente
+  - SpecialistReport : relatório completo de um agente especialista
+  - FinalAnalysis    : resultado consolidado final (sintetizador)
+
+Todos os modelos usam validação automática do Pydantic v2 com Field constraints.
 """
 from typing import List, Dict, Optional, Literal
 from pydantic import BaseModel, Field
@@ -7,12 +16,18 @@ from datetime import datetime
 
 
 class AnalysisRequest(BaseModel):
-    """Request model for analysis endpoint."""
+    """
+    Modelo de entrada para o endpoint POST /analyze.
+
+    A usuária responde exatamente 5 perguntas (uma por dimensão de risco).
+    Cada resposta é uma string livre. A validação garante que o array
+    tenha exatamente 5 elementos (min_length=5, max_length=5).
+    """
     responses: List[str] = Field(
         ..., 
         min_length=5, 
         max_length=5,
-        description="Exactly 5 user responses to analyze",
+        description="Exatamente 5 respostas da usuária para análise (uma por dimensão)",
         examples=[
             [
                 "Sim, ele às vezes grita comigo quando está estressado",
@@ -24,6 +39,7 @@ class AnalysisRequest(BaseModel):
         ]
     )
     
+    # Exemplo extra para documentação OpenAPI (Swagger)
     model_config = {
         "json_schema_extra": {
             "examples": [
@@ -42,71 +58,70 @@ class AnalysisRequest(BaseModel):
 
 
 class RiskFactor(BaseModel):
-    """Individual risk factor identified."""
+    """
+    Fator de risco individual identificado na análise.
+
+    Cada especialista pode retornar múltiplos fatores. O sintetizador
+    consolida todos em uma lista final.
+
+    Campos:
+      - factor     : nome curto do fator (ex: "Controle excessivo")
+      - severity   : nível de gravidade — restrito a Baixo/Médio/Alto
+      - description: explicação detalhada do fator observado
+    """
     factor: str = Field(
         ..., 
-        description="Name of the risk factor",
+        description="Nome do fator de risco",
         examples=["Controle excessivo", "Isolamento social"]
     )
     severity: Literal["Baixo", "Médio", "Alto"] = Field(
         ..., 
-        description="Severity level"
+        description="Nível de gravidade do fator"
     )
     description: str = Field(
         ..., 
-        description="Detailed description of the factor",
+        description="Descrição detalhada do fator identificado",
         examples=["Parceiro demonstra comportamento controlador sobre atividades sociais"]
     )
 
 
 class SpecialistReport(BaseModel):
-    """Report from a specialist agent."""
-    agent_id: str = Field(..., description="Specialist agent identifier")
-    domain: str = Field(..., description="Domain of expertise")
-    analysis: str = Field(..., description="Detailed analysis of the response")
-    preliminary_score: float = Field(..., ge=0, le=100, description="Preliminary risk score")
-    risk_factors: List[RiskFactor] = Field(default_factory=list, description="Identified risk factors")
-    justification: str = Field(..., description="Justification for the score")
+    """
+    Relatório gerado por um agente especialista (Fase 1).
 
+    Contém a análise detalhada de uma única dimensão de risco,
+    incluindo score preliminar e fatores identificados.
 
-class ReviewFeedback(BaseModel):
-    """Feedback from supervisor agent."""
-    status: Literal["APROVADO", "REVISAR"] = Field(..., description="Review status")
-    feedback: Optional[str] = Field(None, description="Detailed feedback if revision needed")
-    agent_id: str = Field(..., description="Agent being reviewed")
+    Campos:
+      - agent_id          : identificador do especialista ("1" a "5")
+      - domain            : nome do domínio de expertise
+      - analysis          : texto completo da análise
+      - preliminary_score : score de risco 0-100
+      - risk_factors      : lista de RiskFactor identificados
+      - justification     : justificativa para o score atribuído
+    """
+    agent_id: str = Field(..., description="Identificador do agente especialista")
+    domain: str = Field(..., description="Domínio de expertise do agente")
+    analysis: str = Field(..., description="Análise detalhada da resposta")
+    preliminary_score: float = Field(..., ge=0, le=100, description="Score preliminar de risco (0-100)")
+    risk_factors: List[RiskFactor] = Field(default_factory=list, description="Fatores de risco identificados")
+    justification: str = Field(..., description="Justificativa para o score")
 
 
 class FinalAnalysis(BaseModel):
-    """Final consolidated analysis."""
-    final_score: float = Field(..., ge=0, le=100, description="Final consolidated risk score")
-    risk_level: Literal["Baixo", "Médio", "Alto"] = Field(..., description="Overall risk classification")
-    consolidated_factors: List[RiskFactor] = Field(..., description="All identified risk factors")
-    synthesis: str = Field(..., description="Holistic analysis synthesizing all reports")
-    recommendations: List[str] = Field(default_factory=list, description="Recommended actions")
-    specialist_reports: List[SpecialistReport] = Field(..., description="All approved specialist reports")
+    """
+    Análise final consolidada pelo agente Sintetizador (Fase 3).
 
+    Combina os resultados dos 5 especialistas em um único parecer final
+    com classificação de risco e recomendações de ação.
 
-class LogEvent(BaseModel):
-    """Individual log event."""
-    timestamp: datetime = Field(default_factory=datetime.now)
-    event_type: Literal[
-        "request_received",
-        "specialist_analysis",
-        "reviewer_feedback", 
-        "rework_attempt",
-        "final_synthesis",
-        "error"
-    ]
-    agent_id: Optional[str] = None
-    attempt: Optional[int] = None
-    data: Dict = Field(default_factory=dict)
-
-
-class RequestLog(BaseModel):
-    """Complete request log."""
-    request_id: str
-    timestamp: datetime = Field(default_factory=datetime.now)
-    request_payload: Dict
-    events: List[LogEvent] = Field(default_factory=list)
-    response: Optional[Dict] = None
-    duration_seconds: Optional[float] = None
+    Campos:
+      - risk_score          : score consolidado 0-100
+      - risk_level          : classificação textual (BAIXO/MODERADO/ALTO/CRÍTICO)
+      - consolidated_factors: lista unificada de todos os fatores de risco
+      - recommendations     : sugestões de ação para a usuária
+    """
+    risk_score: float = Field(..., ge=0, le=100, description="Score final consolidado de risco (0-100)")
+    risk_level: Literal["BAIXO", "MODERADO", "ALTO", "CRÍTICO"] = Field(..., description="Classificação geral de risco")
+    consolidated_factors: List[RiskFactor] = Field(..., description="Todos os fatores de risco identificados")
+    recommendations: List[str] = Field(default_factory=list, description="Ações recomendadas")

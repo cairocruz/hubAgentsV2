@@ -1,88 +1,83 @@
 """
-LLM Configuration for Microsoft Agent Framework.
-Supports Azure OpenAI, OpenAI, and Groq (via OpenAI-compatible API).
+config/llm_config.py — Configuração do provedor de LLM para o CrewAI.
+
+Este módulo centraliza a seleção do provedor de modelo de linguagem (Gemini,
+OpenAI ou Groq) e seus hiperparâmetros. O CrewAI utiliza o LiteLLM por baixo
+dos panos, então os nomes de modelo retornados aqui seguem a convenção do
+LiteLLM (ex: "gemini/gemini-1.5-flash", "openai/gpt-4o-mini").
+
+Variáveis de ambiente esperadas (definidas no .env):
+  - LLM_PROVIDER        : "gemini" (padrão) | "openai" | "groq"
+  - GEMINI_API_KEY       : chave da API do Google Gemini
+  - GEMINI_MODEL         : nome do modelo Gemini (padrão: gemini/gemini-1.5-flash)
+  - OPENAI_API_KEY       : chave da API da OpenAI
+  - OPENAI_MODEL         : nome do modelo OpenAI (padrão: openai/gpt-4o-mini)
+  - GROQ_API_KEY         : chave da API da Groq
+  - GROQ_MODEL           : nome do modelo Groq (padrão: llama3-8b-8192)
+  - LLM_TEMPERATURE      : temperatura de geração (padrão: 0.2)
+  - LLM_MAX_TOKENS       : máximo de tokens na resposta (padrão: 4000)
 """
 import os
-from typing import Any
 from dotenv import load_dotenv
 
+# Carrega variáveis do arquivo .env para os.environ
 load_dotenv()
-
-
-def get_chat_client() -> Any:
-    """
-    Get configured chat client for Agent Framework.
-    Tries providers in order: Azure OpenAI → OpenAI → Groq
-    
-    Returns:
-        Configured chat client for creating agents
-        
-    Raises:
-        ValueError: If no valid configuration is found
-    """
-    
-    # Option 1: Azure OpenAI (Recommended for production)
-    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    if azure_endpoint:
-        from agent_framework.azure import AzureOpenAIResponsesClient
-        
-        return AzureOpenAIResponsesClient(
-            endpoint=azure_endpoint,
-            deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"),
-            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
-        )
-    
-    # Option 2: OpenAI direct
-    openai_key = os.getenv("OPENAI_API_KEY")
-    if openai_key:
-        from openai import AsyncOpenAI
-        
-        return AsyncOpenAI(
-            api_key=openai_key
-        )
-    
-    # Option 3: Groq (via OpenAI-compatible API)
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key:
-        from openai import AsyncOpenAI
-        
-        return AsyncOpenAI(
-            api_key=groq_key,
-            base_url="https://api.groq.com/openai/v1"
-        )
-    
-    raise ValueError(
-        "No LLM configuration found! Please set one of:\n"
-        "  - AZURE_OPENAI_ENDPOINT + AZURE_OPENAI_API_KEY (Azure OpenAI)\n"
-        "  - OPENAI_API_KEY (OpenAI)\n"
-        "  - GROQ_API_KEY (Groq)"
-    )
 
 
 def get_model_name() -> str:
     """
-    Get the model name based on active provider.
-    
+    Retorna o nome do modelo de linguagem no formato esperado pelo LiteLLM.
+
+    A lógica seleciona o provedor com base na variável LLM_PROVIDER:
+      - "groq"   → prefixo "openai/" para que o CrewAI roteie via OpenAI-compat
+      - "openai"  → modelo direto com prefixo "openai/"
+      - qualquer outro (padrão) → Gemini, prefixo "gemini/"
+
+    Também emite avisos se a chave de API correspondente não estiver configurada.
+
     Returns:
-        str: Model name to use
+        str: String do modelo (ex: "gemini/gemini-1.5-flash")
     """
-    if os.getenv("AZURE_OPENAI_ENDPOINT"):
-        return os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini")
-    elif os.getenv("OPENAI_API_KEY"):
-        return os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    elif os.getenv("GROQ_API_KEY"):
-        return os.getenv("GROQ_MODEL", "llama3-8b-8192")
-    
-    return "gpt-4o-mini"  # Default fallback
+    provider = os.getenv("LLM_PROVIDER", "gemini").lower()
+
+    # --- Provedor GROQ (modelos Meta Llama via Groq Cloud) ---
+    if provider == "groq":
+        groq_key = os.getenv("GROQ_API_KEY")
+        if not groq_key or groq_key.startswith("sua_chave"):
+            print("⚠️ AVISO: GROQ_API_KEY não configurada no .env!")
+        
+        model = os.getenv("GROQ_MODEL", "llama3-8b-8192")
+        # O CrewAI/LiteLLM precisa do prefixo "openai/" para rotear
+        # chamadas ao endpoint OpenAI-compatible da Groq
+        if not model.startswith("openai/"):
+            model = f"openai/{model}"
+        return model
+
+    # --- Provedor OPENAI ---
+    elif provider == "openai":
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key or openai_key.startswith("sua_chave"):
+            print("⚠️ AVISO: OPENAI_API_KEY não configurada no .env!")
+        return os.getenv("OPENAI_MODEL", "openai/gpt-4o-mini")
+
+    # --- Provedor GEMINI (padrão) ---
+    else:
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if not gemini_key or gemini_key.startswith("sua_chave"):
+            print("⚠️ AVISO: GEMINI_API_KEY não configurada no .env!")
+        return os.getenv("GEMINI_MODEL", "gemini/gemini-1.5-flash")
 
 
 def get_model_config() -> dict:
     """
-    Get model configuration parameters.
-    
+    Retorna os hiperparâmetros de geração do modelo.
+
+    Lê do .env ou usa valores padrão conservadores:
+      - temperature  = 0.2  (respostas mais determinísticas)
+      - max_tokens   = 4000 (limite de tokens na resposta)
+
     Returns:
-        dict: Configuration for model behavior
+        dict: Dicionário com "temperature" e "max_tokens".
     """
     return {
         "temperature": float(os.getenv("LLM_TEMPERATURE", "0.2")),
@@ -92,16 +87,11 @@ def get_model_config() -> dict:
 
 def get_provider_name() -> str:
     """
-    Get the name of the active LLM provider.
-    
+    Retorna o nome do provedor de LLM ativo (ex: "gemini", "openai", "groq").
+
+    Usado para exibir no log ou no endpoint /health.
+
     Returns:
-        str: Provider name (azure_openai, openai, or groq)
+        str: Nome do provedor em minúsculas.
     """
-    if os.getenv("AZURE_OPENAI_ENDPOINT"):
-        return "azure_openai"
-    elif os.getenv("OPENAI_API_KEY"):
-        return "openai"
-    elif os.getenv("GROQ_API_KEY"):
-        return "groq"
-    
-    return "unknown"
+    return os.getenv("LLM_PROVIDER", "gemini").lower()
