@@ -73,7 +73,7 @@ flowchart TB
 
     subgraph RAG["RAG — Supabase + pgvector"]
         EMB["SentenceTransformer<br/>(384 dims)"]
-        DB["agent_examples<br/>match_responses()"]
+        DB["agent_examples<br/>match_responses"]
     end
 
     subgraph PHASE2["FASE 2 — Revisão com Retrabalho"]
@@ -111,9 +111,9 @@ graph LR
 
     subgraph CREW["Orquestrador (risk_analysis_crew.py)"]
         RC["RiskAnalysisCrew"]
-        P1["_run_phase1()"]
-        P2["_phase2_review_loop()"]
-        P3["_run_phase3()"]
+        P1["_run_phase1"]
+        P2["_phase2_review_loop"]
+        P3["_run_phase3"]
     end
 
     subgraph AGENTS["Agentes CrewAI"]
@@ -173,14 +173,14 @@ sequenceDiagram
     participant DB as Supabase
 
     U->>API: POST /analyze {responses: [...]}
-    API->>CREW: kickoff()
+    API->>CREW: kickoff
     
     Note over CREW: FASE 1
 
     loop Para cada dimensão (1-5)
         CREW->>E: Criar agente + Task
         E->>RAG: Buscar Casos Similares (embedding)
-        RAG->>DB: match_responses() via pgvector
+        RAG->>DB: match_responses via pgvector
         DB-->>RAG: Top-5 casos similares
         RAG-->>E: Texto formatado com exemplos
         E-->>CREW: JSON {score_risco, justificativa}
@@ -190,7 +190,7 @@ sequenceDiagram
 
     CREW->>SUP: Revisar 5 relatórios
     SUP->>RAG: Buscar base global (validação)
-    RAG->>DB: match_responses() (todas dimensões)
+    RAG->>DB: match_responses — todas dimensões
     DB-->>RAG: Casos similares globais
     SUP-->>CREW: JSON {vereditos: {1: APROVADO, 2: REPROVADO, ...}}
     
@@ -581,7 +581,7 @@ O sistema utiliza 5 tabelas no Supabase:
 flowchart LR
     RESP["Resposta da usuária"] --> EMB["SentenceTransformer<br/>paraphrase-multilingual-MiniLM-L12-v2"]
     EMB --> VEC["Embedding 384 dims"]
-    VEC --> RPC["match_responses()<br/>pgvector cosine"]
+    VEC --> RPC["match_responses<br/>pgvector cosine"]
     RPC --> TOP["Top-5 casos similares"]
     TOP --> AGENT["Agente recebe contexto<br/>histórico para calibrar score"]
 ```
@@ -619,8 +619,8 @@ O módulo `tracing/` é **100% desacoplado** do sistema principal. Se removido, 
 
 ```mermaid
 flowchart LR
-    CREW["RiskAnalysisCrew"] -->|injeta callbacks| CB["create_step_callback()<br/>create_task_callback()"]
-    CB -->|log_event()| TS["TracingService"]
+    CREW["RiskAnalysisCrew"] -->|injeta callbacks| CB["step_callback + task_callback"]
+    CB -->|log_event| TS["TracingService"]
     TS -->|INSERT| DB["agent_trace_events"]
     DB --> V1["vw_trace_timeline"]
     DB --> V2["vw_trace_agent_summary"]
