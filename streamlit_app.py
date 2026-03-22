@@ -9,6 +9,8 @@ Executar:
 """
 
 import os
+import json
+import io
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -65,14 +67,14 @@ def query_table(table: str, filters: dict | None = None, order: str | None = Non
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
-    page_title="HubAgents V2 — Tracing Dashboard",
-    page_icon="🔍",
+    page_title="Visualização de Dados",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-st.title("🔍 HubAgents V2 — Tracing Dashboard")
-st.caption("Visualização dos eventos de execução dos agentes de análise de risco.")
+st.title("� Visualização de Dados")
+st.caption("Resultados de análise e eventos de execução dos agentes.")
 
 # ---------------------------------------------------------------------------
 # Verificação de conexão
@@ -120,12 +122,308 @@ st.sidebar.markdown(f"**Analysis ID:**\n`{analysis_id}`")
 # Tabs principais
 # ---------------------------------------------------------------------------
 
-tab_overview, tab_agents, tab_timeline, tab_raw = st.tabs([
-    "📊 Visão Geral",
-    "🤖 Por Agente",
+tab_results, tab_rework, tab_overview, tab_agents, tab_timeline, tab_raw = st.tabs([
+    "📋 Resultados da Análise",
+    "🔄 Histórico de Retrabalho",
+    "📊 Visão Geral (Tracing)",
+    "🤖 Por Agente (Tracing)",
     "📜 Timeline",
     "🗄️ Dados Brutos",
 ])
+
+# ============================= TAB: RESULTADOS DA ANÁLISE ==================
+
+def _color_risk(level: str) -> str:
+    """Retorna emoji + cor para o nível de risco."""
+    mapping = {
+        "BAIXO": "🟢 BAIXO",
+        "MODERADO": "🟡 MODERADO",
+        "ALTO": "🟠 ALTO",
+        "CRÍTICO": "🔴 CRÍTICO",
+    }
+    return mapping.get(str(level).upper(), level)
+
+
+def _color_status(status: str) -> str:
+    """Emoji para status do supervisor."""
+    if str(status).upper() == "APROVADO":
+        return "✅ APROVADO"
+    return "❌ REPROVADO"
+
+
+with tab_results:
+    # --- Dados dos especialistas (agent_individual_logs) ---
+    df_individual = query_table(
+        "agent_individual_logs",
+        filters={"analysis_id": analysis_id},
+        order="agent_id",
+    )
+
+    # --- Resultado final (agent_logs) ---
+    df_final = query_table(
+        "agent_logs",
+        filters={"analysis_id": analysis_id},
+    )
+
+    if df_individual.empty and df_final.empty:
+        st.warning("Nenhum resultado de análise encontrado para este analysis_id. "
+                   "Verifique se a análise foi concluída com sucesso.")
+    else:
+        # ---- RESULTADO FINAL (SINTETIZADOR) ----
+        if not df_final.empty:
+            st.subheader("🏁 Resultado Final Consolidado")
+
+            # Tentar parsear o analysis_result (JSON string)
+            final_row = df_final.iloc[0]
+            final_result = {}
+            raw_result = final_row.get("analysis_result", "{}")
+            if isinstance(raw_result, str):
+                try:
+                    final_result = json.loads(raw_result)
+                except json.JSONDecodeError:
+                    final_result = {"raw": raw_result}
+            elif isinstance(raw_result, dict):
+                final_result = raw_result
+
+            risk_score = final_result.get("risk_score", "—")
+            risk_level = final_result.get("risk_level", "—")
+
+            # Métricas principais
+            mc1, mc2, mc3 = st.columns(3)
+            mc1.metric("Score de Risco", f"{risk_score}/100")
+            mc2.metric("Nível de Risco", _color_risk(str(risk_level)))
+            mc3.metric("Analysis ID", analysis_id[:12] + "…")
+
+            st.divider()
+
+            # Fatores de risco consolidados
+            factors = final_result.get("consolidated_factors", [])
+            if factors:
+                st.subheader("⚠️ Fatores de Risco Consolidados")
+                for i, f in enumerate(factors, 1):
+                    if isinstance(f, dict):
+                        st.markdown(f"**{i}.** {f.get('factor', f.get('fator', str(f)))}")
+                        if f.get("severity") or f.get("gravidade"):
+                            st.caption(f"   Gravidade: {f.get('severity', f.get('gravidade', ''))}")
+                        if f.get("description") or f.get("descricao"):
+                            st.caption(f"   {f.get('description', f.get('descricao', ''))}")
+                    else:
+                        st.markdown(f"**{i}.** {f}")
+
+            # Recomendações
+            recs = final_result.get("recommendations", final_result.get("recomendacoes", []))
+            if recs:
+                st.subheader("💡 Recomendações")
+                for i, r in enumerate(recs, 1):
+                    st.markdown(f"{i}. {r}")
+
+            st.divider()
+
+        # ---- ANÁLISES POR ESPECIALISTA ----
+        if not df_individual.empty:
+            st.subheader("🤖 Análises por Especialista")
+
+            # Tabela resumo
+            summary_cols = [
+                "agent_id", "agent_domain", "score_risco",
+                "supervisor_status", "rework_count",
+            ]
+            available_cols = [c for c in summary_cols if c in df_individual.columns]
+            df_summary = df_individual[available_cols].copy()
+            df_summary = df_summary.rename(columns={
+                "agent_id": "Agente",
+                "agent_domain": "Domínio",
+                "score_risco": "Score (0-100)",
+                "supervisor_status": "Status Supervisor",
+                "rework_count": "Retrabalhos",
+            })
+            st.dataframe(df_summary, width="stretch", hide_index=True)
+
+            # Gráfico de barras: score por especialista
+            if "score_risco" in df_individual.columns and "agent_domain" in df_individual.columns:
+                st.subheader("📊 Score de Risco por Domínio")
+                chart_df = df_individual.set_index("agent_domain")["score_risco"].dropna()
+                if not chart_df.empty:
+                    st.bar_chart(chart_df)
+
+            st.divider()
+
+            # Detalhes expandíveis por especialista
+            st.subheader("🔎 Detalhes por Especialista")
+            for _, row_spec in df_individual.iterrows():
+                aid = row_spec.get("agent_id", "?")
+                domain = row_spec.get("agent_domain", "")
+                score = row_spec.get("score_risco", "—")
+                status = row_spec.get("supervisor_status", "")
+                status_icon = _color_status(status)
+
+                with st.expander(f"Especialista {aid} — {domain} | Score: {score} | {status_icon}", expanded=False):
+                    st.markdown(f"**Pergunta:** {row_spec.get('question', '—')}")
+                    st.markdown(f"**Resposta da usuária:** {row_spec.get('user_response', '—')}")
+                    st.markdown(f"**Score:** {score}/100")
+                    st.markdown(f"**Status:** {status_icon}")
+                    st.markdown(f"**Retrabalhos:** {row_spec.get('rework_count', 0)}")
+
+                    justif = row_spec.get("justificativa", "")
+                    if justif:
+                        st.markdown("**Justificativa:**")
+                        st.info(justif)
+
+                    sup_fb = row_spec.get("supervisor_feedback", "")
+                    if sup_fb:
+                        st.markdown("**Feedback do Supervisor:**")
+                        st.warning(sup_fb)
+
+                    rag = row_spec.get("rag_results", "")
+                    if rag:
+                        st.markdown("**Casos Similares (RAG):**")
+                        st.code(rag, language="text")
+
+                    raw = row_spec.get("raw_output", "")
+                    if raw:
+                        st.markdown("**Saída Bruta Completa:**")
+                        st.code(raw, language="text")
+
+        # ---- DOWNLOADS ----
+        st.divider()
+        st.subheader("📥 Exportar Resultados")
+
+        dl1, dl2, dl3, dl4 = st.columns(4)
+
+        # CSV dos especialistas
+        if not df_individual.empty:
+            csv_spec = df_individual.to_csv(index=False).encode("utf-8")
+            dl1.download_button(
+                "📥 Especialistas (CSV)",
+                data=csv_spec,
+                file_name=f"especialistas_{analysis_id[:8]}.csv",
+                mime="text/csv",
+            )
+
+            # Excel dos especialistas
+            buf_spec = io.BytesIO()
+            df_individual.to_excel(buf_spec, index=False, sheet_name="Especialistas")
+            dl2.download_button(
+                "📥 Especialistas (Excel)",
+                data=buf_spec.getvalue(),
+                file_name=f"especialistas_{analysis_id[:8]}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+        # JSON do resultado final
+        if not df_final.empty:
+            json_final = json.dumps(final_result, ensure_ascii=False, indent=2)
+            dl3.download_button(
+                "📥 Resultado Final (JSON)",
+                data=json_final.encode("utf-8"),
+                file_name=f"resultado_final_{analysis_id[:8]}.json",
+                mime="application/json",
+            )
+
+        # Tudo junto em Excel (múltiplas abas)
+        if not df_individual.empty or not df_final.empty:
+            buf_all = io.BytesIO()
+            with pd.ExcelWriter(buf_all, engine="openpyxl") as writer:
+                if not df_individual.empty:
+                    df_individual.to_excel(writer, index=False, sheet_name="Especialistas")
+                if not df_final.empty:
+                    df_final.to_excel(writer, index=False, sheet_name="Resultado Final")
+                # Rework history
+                df_rw = query_table(
+                    "agent_rework_history",
+                    filters={"analysis_id": analysis_id},
+                    order="agent_id",
+                )
+                if not df_rw.empty:
+                    df_rw.to_excel(writer, index=False, sheet_name="Retrabalhos")
+            dl4.download_button(
+                "📥 Tudo (Excel)",
+                data=buf_all.getvalue(),
+                file_name=f"analise_completa_{analysis_id[:8]}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+
+
+# ============================= TAB: HISTÓRICO DE RETRABALHO ================
+
+with tab_rework:
+    df_rework = query_table(
+        "agent_rework_history",
+        filters={"analysis_id": analysis_id},
+        order="agent_id",
+    )
+
+    if df_rework.empty:
+        st.info("Nenhum retrabalho registrado para esta análise. "
+                "Todos os especialistas foram aprovados na primeira tentativa, "
+                "ou a análise ainda não possui registros de rework.")
+    else:
+        st.subheader("🔄 Histórico de Retrabalho")
+        st.caption("Registros das análises reprovadas pelo Supervisor e refeitas pelos especialistas.")
+
+        # Métricas
+        total_reworks = len(df_rework)
+        agents_reworked = df_rework["agent_id"].nunique() if "agent_id" in df_rework.columns else 0
+        rc1, rc2 = st.columns(2)
+        rc1.metric("Total de Retrabalhos", total_reworks)
+        rc2.metric("Agentes Retrabalhados", agents_reworked)
+
+        st.divider()
+
+        # Tabela resumo
+        rw_cols = [
+            "agent_id", "agent_domain", "iteration",
+            "original_score_risco", "supervisor_feedback",
+        ]
+        available_rw = [c for c in rw_cols if c in df_rework.columns]
+        st.dataframe(
+            df_rework[available_rw].rename(columns={
+                "agent_id": "Agente",
+                "agent_domain": "Domínio",
+                "iteration": "Rodada",
+                "original_score_risco": "Score Original",
+                "supervisor_feedback": "Feedback do Supervisor",
+            }),
+            width="stretch",
+            hide_index=True,
+        )
+
+        st.divider()
+
+        # Detalhes expandíveis
+        for _, rw_row in df_rework.iterrows():
+            aid = rw_row.get("agent_id", "?")
+            domain = rw_row.get("agent_domain", "")
+            iteration = rw_row.get("iteration", "?")
+
+            with st.expander(f"Especialista {aid} — {domain} | Rodada {iteration}", expanded=False):
+                st.markdown(f"**Score Original:** {rw_row.get('original_score_risco', '—')}")
+
+                orig_just = rw_row.get("original_justificativa", "")
+                if orig_just:
+                    st.markdown("**Justificativa Original:**")
+                    st.info(orig_just)
+
+                sup_fb = rw_row.get("supervisor_feedback", "")
+                if sup_fb:
+                    st.markdown("**Feedback do Supervisor:**")
+                    st.warning(sup_fb)
+
+                orig_raw = rw_row.get("original_raw_output", "")
+                if orig_raw:
+                    st.markdown("**Saída Bruta Original (reprovada):**")
+                    st.code(orig_raw, language="text")
+
+        # Download
+        st.divider()
+        csv_rw = df_rework.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "📥 Baixar Retrabalhos (CSV)",
+            data=csv_rw,
+            file_name=f"retrabalhos_{analysis_id[:8]}.csv",
+            mime="text/csv",
+        )
+
 
 # ============================= TAB: VISÃO GERAL ============================
 
@@ -329,5 +627,5 @@ with tab_raw:
 # ---------------------------------------------------------------------------
 
 st.sidebar.divider()
-st.sidebar.caption("HubAgents V2 — Tracing Dashboard")
+st.sidebar.caption("Visualização de Dados")
 st.sidebar.caption(f"Supabase: ✅ Conectado")
