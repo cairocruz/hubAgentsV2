@@ -20,9 +20,8 @@
 6. [API REST](#6-api-rest)
 7. [Banco de Dados (Supabase)](#7-banco-de-dados-supabase)
 8. [Tracing e Observabilidade](#8-tracing-e-observabilidade)
-9. [Resultados e Discussão](#9-resultados-e-discussão)
-10. [Referências](#10-referências)
-11. [Licença e Autor](#11-licença-e-autor)
+9. [Referências](#10-referências)
+10. [Licença e Autor](#11-licença-e-autor)
 
 ---
 
@@ -673,74 +672,7 @@ Acesse em **http://localhost:8501**.
 
 ---
 
-## 9. Resultados e Discussão
-
-### 9.1 Performance Típica
-
-| Fase | Tempo Médio | Descrição |
-|---|---|---|
-| **Validação** | ~10ms | Validação Pydantic da requisição |
-| **Fase 1 (5 especialistas)** | ~15-30s | Cada especialista: RAG + LLM inference |
-| **Fase 2 (Supervisor)** | ~5-10s | Revisão + eventuais retrabalhos |
-| **Fase 3 (Sintetizador)** | ~3-5s | Consolidação final |
-| **Total** | ~25-50s | Tempo médio end-to-end |
-
-> *Tempos variam conforme provedor LLM, carga de rede e complexidade das respostas. Groq tende a ser mais rápido; Gemini é o padrão.*
-
-### 9.2 Comparação entre Provedores
-
-```mermaid
-graph TB
-    subgraph "Provedores LLM Suportados"
-        A["Gemini (Padrão)"]
-        B["OpenAI"]
-        C["Groq"]
-    end
-
-    A -->|Latência| A1["Média (~3-5s/agente)"]
-    A -->|Custo| A2["Gratuito (free tier)"]
-    A -->|Qualidade| A3["Boa (gemini-1.5-flash)"]
-
-    B -->|Latência| B1["Média-Alta (~4-7s/agente)"]
-    B -->|Custo| B2["Pago (API pricing)"]
-    B -->|Qualidade| B3["Alta (GPT-4o-mini)"]
-
-    C -->|Latência| C1["Baixa (~1-3s/agente)"]
-    C -->|Custo| C2["Gratuito (free tier)"]
-    C -->|Qualidade| C3["Boa (Llama3)"]
-
-    classDef gemini fill:#4285F4,stroke:#3367D6,color:#fff
-    classDef openai fill:#10a37f,stroke:#0d8f6c,color:#fff
-    classDef groq fill:#ff6b35,stroke:#cc5629,color:#fff
-
-    class A,A1,A2,A3 gemini
-    class B,B1,B2,B3 openai
-    class C,C1,C2,C3 groq
-```
-
-### 9.3 Casos de Teste
-
-**Caso 1 — Risco Baixo**
-```
-Score: 15  |  Nível: BAIXO
-Análise: Relacionamento saudável, sem indicadores significativos de risco.
-```
-
-**Caso 2 — Risco Moderado**
-```
-Score: 42  |  Nível: MODERADO
-Análise: Alguns padrões de atenção, recomenda-se acompanhamento profissional.
-```
-
-**Caso 3 — Risco Alto/Crítico**
-```
-Score: 82  |  Nível: CRÍTICO
-Análise: Múltiplos indicadores severos, intervenção urgente recomendada.
-```
-
----
-
-## 10. Referências
+## 9. Referências
 
 ### Frameworks e Bibliotecas
 
@@ -750,27 +682,14 @@ Análise: Múltiplos indicadores severos, intervenção urgente recomendada.
 4. **Supabase Documentation**. Supabase Inc. Disponível em: https://supabase.com/docs
 5. **SentenceTransformers Documentation**. UKPLab. Disponível em: https://www.sbert.net/
 
-### Artigos Científicos e Técnicos
-
-6. WOOLDRIDGE, M. **An Introduction to MultiAgent Systems**. 2nd ed. Wiley, 2009.
-7. VASWANI, A. et al. **Attention Is All You Need**. In: NeurIPS, 2017.
-8. BROWN, T. et al. **Language Models are Few-Shot Learners**. In: NeurIPS, 2020.
-9. LEWIS, P. et al. **Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks**. In: NeurIPS, 2020.
-
 ### APIs
 
 10. **OpenAI API Reference**. OpenAI, 2024. Disponível em: https://platform.openai.com/docs/
 11. **Google Gemini API Documentation**. Google, 2024. Disponível em: https://ai.google.dev/docs
 12. **Groq API Documentation**. Groq, Inc., 2024. Disponível em: https://console.groq.com/docs/
-
-### Boas Práticas
-
-13. MARTIN, R. C. **Clean Architecture**. Prentice Hall, 2017.
-14. GAMMA, E. et al. **Design Patterns: Elements of Reusable Object-Oriented Software**. Addison-Wesley, 1994.
-
 ---
 
-## 11. Licença e Autor
+## 10. Licença e Autor
 
 ### Licença MIT
 
