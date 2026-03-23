@@ -24,11 +24,26 @@ load_dotenv()
 
 @st.cache_resource
 def _get_supabase():
-    """Cria o cliente Supabase uma única vez (cacheado pela sessão)."""
+    """Cria o cliente Supabase uma única vez (cacheado pela sessão).
+
+    Prioridade das credenciais, em ordem:
+      1. Variáveis de ambiente (SUPABASE_URL, SUPABASE_KEY) — usadas no deploy local/Cloud Run.
+      2. st.secrets (quando rodando no Streamlit Cloud).
+    """
+    # 1) Tenta pegar das variáveis de ambiente (local, Cloud Run, etc.)
     url = os.getenv("SUPABASE_URL", "")
     key = os.getenv("SUPABASE_KEY", "")
+
+    # 2) Se não veio nada, tenta buscar em st.secrets (Streamlit Cloud)
+    if (not url or not key) and hasattr(st, "secrets"):
+        if "SUPABASE_URL" in st.secrets:
+            url = url or st.secrets["SUPABASE_URL"]
+        if "SUPABASE_KEY" in st.secrets:
+            key = key or st.secrets["SUPABASE_KEY"]
+
     if not url or not key:
         return None
+
     from supabase import create_client
     return create_client(url, key)
 
@@ -83,7 +98,8 @@ st.caption("Resultados de análise e eventos de execução dos agentes.")
 client = _get_supabase()
 if client is None:
     st.error(
-        "⚠️ Supabase não configurado. Defina `SUPABASE_URL` e `SUPABASE_KEY` no arquivo `.env`."
+        "⚠️ Supabase não configurado. Defina `SUPABASE_URL` e `SUPABASE_KEY` no `.env` (local) "
+        "ou em `Secrets` / variáveis de ambiente da plataforma de deploy."
     )
     st.stop()
 
