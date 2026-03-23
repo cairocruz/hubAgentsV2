@@ -260,6 +260,7 @@ async def analyze_responses(request: AnalysisRequest):
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
+    import os
 
     print("""
     ╔═══════════════════════════════════════════════════════════════╗
@@ -268,11 +269,13 @@ if __name__ == "__main__":
     ╚═══════════════════════════════════════════════════════════════╝
     """)
 
-    # Inicia o servidor HTTP na porta 8000, acessível de qualquer interface.
-    # log_level="info" exibe as requisições recebidas no console.
+    # Cloud Run define a variável de ambiente PORT (ex.: 8080).
+    # Localmente, se PORT não estiver definida, usamos 8000 como padrão.
+    port = int(os.getenv("PORT", "8000"))
+
     uvicorn.run(
         app,
-        host="0.0.0.0",      # Escuta em todas as interfaces de rede
-        port=8000,            # Porta HTTP
-        log_level="info"      # Nível de log do Uvicorn
+        host="0.0.0.0",  # Escuta em todas as interfaces de rede
+        port=port,         # Porta vinda da variável de ambiente ou 8000
+        log_level="info"  # Nível de log do Uvicorn
     )
